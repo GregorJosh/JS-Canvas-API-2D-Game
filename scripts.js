@@ -1,6 +1,8 @@
+var h1, prevBgColor;
+
 window.onload = function () {
-  var h1 = document.getElementsByTagName("h1")[0];
-  var prevBgColor = h1.style.color;
+  h1 = document.getElementsByTagName("h1")[0];
+  prevBgColor = h1.style.color;
 
   document.body.onpointermove = function () {
     h1.innerHTML = "Dajesz tam, dajesz!!!";
