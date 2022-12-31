@@ -1,14 +1,22 @@
 window.onload = function () {
+  var h1 = document.getElementsByTagName("h1")[0];
+  var prevBgColor = h1.style.color;
+
   document.body.onpointermove = function () {
-    document.getElementsByTagName("h1")[0].innerHTML = "Dajesz tam, dajesz!!!";
+    h1.innerHTML = "Dajesz tam, dajesz!!!";
+    h1.style.color = "white";
+    document.body.style.backgroundColor = "black";
+
     console.log("Pointer moving...");
   };
 
-  start();
+  letsGo();
 };
 
-function start() {
-    setInterval(function () {
-        document.getElementsByTagName("h1")[0].innerHTML = "Witaj Świecie!";
-    }, 5000);
+function letsGo() {
+  setInterval(function () {
+    h1.innerHTML = "Witaj Świecie!";
+    h1.style.color = "black";
+    document.body.style.backgroundColor = prevBgColor;
+  }, 5000);
 }
