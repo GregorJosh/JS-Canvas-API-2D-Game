@@ -19,17 +19,43 @@ class Rectangle {
   }
 }
 
-onload = function () {
-  const canvas = this.document.querySelector("#canvas1");
+class Game {
+  canvas = document.createElement("canvas");
+  gameObjects = [];
 
-  if (canvas.getContext) {
-    canvas.width = this.document.body.clientWidth;
-    canvas.height = 600;
-    canvas.style.border = "1px solid black";
+  constructor() {}
 
-    const context = canvas.getContext("2d");
+  start() {
+    this.canvas.width = document.body.clientWidth;
+    this.canvas.height = window.innerHeight - 200;
+    this.context = this.canvas.getContext("2d");
 
-    const rectangle = new Rectangle(10, 10, 800, 500, "red");
-    rectangle.draw(context);
+    document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+
+    this.interval = setInterval(this.update(), 20);
   }
+
+  clear() {
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+  }
+
+  update() {
+    this.clear();
+
+    for (let i = 0; i < this.gameObjects.length; ++i) {
+      this.gameObjects[i].draw(this.context);
+    }
+  }
+
+  addGameObject(gameObject) {
+    this.gameObjects.push(gameObject);
+  }
+}
+
+onload = function () {
+  const game = new Game();
+  const rectangle = new Rectangle(10, 10, 300, 300, "red");
+
+  game.addGameObject(rectangle);
+  game.start();
 };
