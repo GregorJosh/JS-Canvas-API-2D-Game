@@ -1,4 +1,9 @@
 class Rectangle {
+  velocity = {
+    x: 0,
+    y: 0,
+  };
+
   constructor(x, y, width, height, color) {
     this.x = x;
     this.y = y;
@@ -17,22 +22,57 @@ class Rectangle {
     context.lineTo(this.x, this.y);
     context.stroke();
   }
+
+  update() {
+    if (this.game.key && this.game.key == "w") {
+      this.velocity.y -= 1;
+    }
+
+    if (this.game.key && this.game.key == "s") {
+      this.velocity.y += 1;
+    }
+
+    if (this.game.key && this.game.key == "a") {
+      this.velocity.x -= 1;
+    }
+
+    if (this.game.key && this.game.key == "d") {
+      this.velocity.x += 1;
+    }
+
+    this.x += this.velocity.x;
+    this.y += this.velocity.y;
+
+    this.velocity.x = 0;
+    this.velocity.y = 0;
+  }
 }
 
 class Game {
   canvas = document.createElement("canvas");
   gameObjects = [];
-
-  constructor() {}
+  key = false;
 
   start() {
+    var t = this;
+
+    window.addEventListener("keydown", function (event) {
+      t.key = event.key;
+    });
+
+    window.addEventListener("keyup", function (event) {
+      t.key = false;
+    });
+
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = window.innerHeight - 200;
     this.context = this.canvas.getContext("2d");
 
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 
-    this.interval = setInterval(this.update(), 20);
+    this.interval = setInterval(function () {
+      t.update();
+    }, 20);
   }
 
   clear() {
@@ -43,11 +83,14 @@ class Game {
     this.clear();
 
     for (let i = 0; i < this.gameObjects.length; ++i) {
+      this.gameObjects[i].update();
       this.gameObjects[i].draw(this.context);
     }
   }
 
   addGameObject(gameObject) {
+    gameObject.game = this;
+
     this.gameObjects.push(gameObject);
   }
 }
