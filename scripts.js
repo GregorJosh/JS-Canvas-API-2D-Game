@@ -1,6 +1,6 @@
 class Player {
   onUpdate = null;
-
+  
   velocity = {
     x: 0,
     y: 0,
