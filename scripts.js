@@ -82,7 +82,7 @@ class Game {
       if (!t.keys) {
         t.keys = [];
       }
-
+      
       t.keys[event.key] = true;
     });
 
