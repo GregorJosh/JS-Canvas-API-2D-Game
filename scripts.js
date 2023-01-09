@@ -24,19 +24,19 @@ class Rectangle {
   }
 
   update() {
-    if (this.game.key && this.game.key == "w") {
+    if (this.game.keys && this.game.keys["w"]) {
       this.velocity.y -= 1;
     }
 
-    if (this.game.key && this.game.key == "s") {
+    if (this.game.keys && this.game.keys["s"]) {
       this.velocity.y += 1;
     }
 
-    if (this.game.key && this.game.key == "a") {
+    if (this.game.keys && this.game.keys["a"]) {
       this.velocity.x -= 1;
     }
 
-    if (this.game.key && this.game.key == "d") {
+    if (this.game.keys && this.game.keys["d"]) {
       this.velocity.x += 1;
     }
 
@@ -51,17 +51,21 @@ class Rectangle {
 class Game {
   canvas = document.createElement("canvas");
   gameObjects = [];
-  key = false;
+  keys = false;
 
   start() {
     var t = this;
 
     window.addEventListener("keydown", function (event) {
-      t.key = event.key;
+      if (!t.keys) {
+        t.keys = [];
+      }
+      
+      t.keys[event.key] = true;
     });
 
     window.addEventListener("keyup", function (event) {
-      t.key = false;
+      t.keys[event.key] = false;
     });
 
     this.canvas.width = document.body.clientWidth;
@@ -95,7 +99,7 @@ class Game {
   }
 }
 
-onload = function () {
+window.onload = function () {
   const game = new Game();
   const rectangle = new Rectangle(10, 10, 300, 300, "red");
 
