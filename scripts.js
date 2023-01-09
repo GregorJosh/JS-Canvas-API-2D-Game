@@ -26,7 +26,7 @@ class Player {
   draw(context) {
     if (this.type == "image") {
       context.drawImage(
-        this.color,
+        this.image,
         this.position.x,
         this.position.y,
         this.width,
@@ -123,7 +123,7 @@ class Game {
 
 window.onload = function () {
   const game = new Game();
-  const player = new Player(10, 10, 300, 300, "images/skeleton.png", "image");
+  const player = new Player(10, 10, 28, 48, "images/skeleton.png", "image");
 
   game.addGameObject(player);
   game.start();
