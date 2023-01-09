@@ -1,47 +1,69 @@
-class Rectangle {
+class Player {
   velocity = {
     x: 0,
     y: 0,
   };
 
-  constructor(x, y, width, height, color) {
-    this.x = x;
-    this.y = y;
+  position = {
+    x: 0,
+    y: 0,
+  };
+
+  constructor(x, y, width, height, color, type) {
+    this.position.x = x;
+    this.position.y = y;
     this.width = width;
     this.height = height;
     this.color = color;
+    this.type = type;
+
+    if (type == "image") {
+      this.image = new Image();
+      this.image.src = color;
+    }
   }
 
   draw(context) {
-    context.beginPath();
-    context.strokeStyle = this.color;
-    context.moveTo(this.x, this.y);
-    context.lineTo(this.x + this.width, this.y);
-    context.lineTo(this.x + this.width, this.y + this.height);
-    context.lineTo(this.x, this.y + this.height);
-    context.lineTo(this.x, this.y);
-    context.stroke();
+    if (this.type == "image") {
+      context.drawImage(
+        this.color,
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
+    } else {
+      context.fillStyle = this.color;
+      context.fillRect(
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
+    }
   }
 
+  // Metoda Update jest wywoływana po przypisaniu wskaźnika do obiektu gry!
+
   update() {
-    if (this.game.key && this.game.key == "w") {
+    if (this.game.keys && this.game.keys["w"]) {
       this.velocity.y -= 1;
     }
 
-    if (this.game.key && this.game.key == "s") {
+    if (this.game.keys && this.game.keys["s"]) {
       this.velocity.y += 1;
     }
 
-    if (this.game.key && this.game.key == "a") {
+    if (this.game.keys && this.game.keys["a"]) {
       this.velocity.x -= 1;
     }
 
-    if (this.game.key && this.game.key == "d") {
+    if (this.game.keys && this.game.keys["d"]) {
       this.velocity.x += 1;
     }
 
-    this.x += this.velocity.x;
-    this.y += this.velocity.y;
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
 
     this.velocity.x = 0;
     this.velocity.y = 0;
@@ -51,17 +73,21 @@ class Rectangle {
 class Game {
   canvas = document.createElement("canvas");
   gameObjects = [];
-  key = false;
+  keys = false;
 
   start() {
     var t = this;
 
     window.addEventListener("keydown", function (event) {
-      t.key = event.key;
+      if (!t.keys) {
+        t.keys = [];
+      }
+
+      t.keys[event.key] = true;
     });
 
     window.addEventListener("keyup", function (event) {
-      t.key = false;
+      t.keys[event.key] = false;
     });
 
     this.canvas.width = document.body.clientWidth;
@@ -95,10 +121,10 @@ class Game {
   }
 }
 
-onload = function () {
+window.onload = function () {
   const game = new Game();
-  const rectangle = new Rectangle(10, 10, 300, 300, "red");
+  const player = new Player(10, 10, 300, 300, "images/skeleton.png", "image");
 
-  game.addGameObject(rectangle);
+  game.addGameObject(player);
   game.start();
 };
