@@ -1,29 +1,71 @@
-class Rectangle {
+class Player {
+  state = "idle";
+
   velocity = {
     x: 0,
     y: 0,
   };
 
-  constructor(x, y, width, height, color) {
-    this.x = x;
-    this.y = y;
+  position = {
+    x: 0,
+    y: 0,
+  };
+
+  constructor(x, y, width, height, color, type) {
+    this.position.x = x;
+    this.position.y = y;
     this.width = width;
     this.height = height;
     this.color = color;
+    this.type = type;
+
+    if (type == "image") {
+      this.image = new Image();
+      this.image.src = color;
+    }
   }
 
   draw(context) {
-    context.beginPath();
-    context.strokeStyle = this.color;
-    context.moveTo(this.x, this.y);
-    context.lineTo(this.x + this.width, this.y);
-    context.lineTo(this.x + this.width, this.y + this.height);
-    context.lineTo(this.x, this.y + this.height);
-    context.lineTo(this.x, this.y);
-    context.stroke();
+    if (this.type == "image") {
+      context.drawImage(
+        this.image,
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
+    } else {
+      context.fillStyle = this.color;
+      context.fillRect(
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
+    }
   }
 
+  // Metoda Update jest wywoływana po przypisaniu wskaźnika do obiektu gry!
+
   update() {
+    switch (this.state) {
+      case "move left": {
+        break;
+      }
+      case "move right": {
+        break;
+      }
+      case "move up": {
+        break;
+      }
+      case "move down": {
+        break;
+      }
+      default: {
+        break;
+      }
+    }
+
     if (this.game.keys && this.game.keys["w"]) {
       this.velocity.y -= 1;
     }
@@ -40,8 +82,8 @@ class Rectangle {
       this.velocity.x += 1;
     }
 
-    this.x += this.velocity.x;
-    this.y += this.velocity.y;
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
 
     this.velocity.x = 0;
     this.velocity.y = 0;
@@ -60,7 +102,7 @@ class Game {
       if (!t.keys) {
         t.keys = [];
       }
-      
+
       t.keys[event.key] = true;
     });
 
@@ -101,8 +143,8 @@ class Game {
 
 window.onload = function () {
   const game = new Game();
-  const rectangle = new Rectangle(10, 10, 300, 300, "red");
+  const player = new Player(10, 10, 28, 48, "images/skeleton.png", "image");
 
-  game.addGameObject(rectangle);
+  game.addGameObject(player);
   game.start();
 };
