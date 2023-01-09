@@ -1,7 +1,7 @@
 class Player {
   state = "idle";
   states = [];
-
+  
   velocity = {
     x: 0,
     y: 0,
