@@ -1,6 +1,5 @@
 class Player {
-  state = "idle";
-  states = [];
+  onUpdate = null;
 
   velocity = {
     x: 0,
@@ -49,47 +48,8 @@ class Player {
   // Metoda Update jest wywoływana po przypisaniu wskaźnika do obiektu gry!
 
   update() {
-    if (this.game.keys && this.game.keys["w"]) {
-      this.state = "move up";
-    }
-
-    if (this.game.keys && this.game.keys["s"]) {
-      this.state = "move down";
-    }
-
-    if (this.game.keys && this.game.keys["a"]) {
-      this.state = "move left";
-    }
-
-    if (this.game.keys && this.game.keys["d"]) {
-      this.state = "move right";
-    }
-
-    switch (this.state) {
-      case "move left": {
-        this.image.src = "images/skeleton_walk_left.png";
-        this.velocity.x -= 1;
-        break;
-      }
-      case "move right": {
-        this.image.src = "images/skeleton_walk_right.png";
-        this.velocity.x += 1;
-        break;
-      }
-      case "move up": {
-        this.image.src = "images/skeleton_walk_up.png";
-        this.velocity.y -= 1;
-        break;
-      }
-      case "move down": {
-        this.image.src = "images/skeleton_walk_down.png";
-        this.velocity.y += 1;
-        break;
-      }
-      default: {
-        this.image.src = "images/skeleton_walk_right.png";
-        break;
-      }
+    if (this.onUpdate) {
+      this.onUpdate();
     }
 
     this.position.x += this.velocity.x;
@@ -97,12 +57,6 @@ class Player {
 
     this.velocity.x = 0;
     this.velocity.y = 0;
-
-    this.state = "idle";
-  }
-
-  addState(state) {
-
   }
 }
 
@@ -160,6 +114,28 @@ class Game {
 window.onload = function () {
   const game = new Game();
   const player = new Player(10, 10, 28, 48, "images/skeleton_walk_right.png", "image");
+
+  player.onUpdate = function () {
+    if (this.game.keys && this.game.keys["w"]) {
+      this.image.src = "images/skeleton_walk_up.png";
+      this.velocity.y -= 1;
+    }
+
+    if (this.game.keys && this.game.keys["s"]) {
+      this.image.src = "images/skeleton_walk_down.png";
+      this.velocity.y += 1;
+    }
+
+    if (this.game.keys && this.game.keys["a"]) {
+      this.image.src = "images/skeleton_walk_left.png";
+      this.velocity.x -= 1;
+    }
+
+    if (this.game.keys && this.game.keys["d"]) {
+      this.image.src = "images/skeleton_walk_right.png";
+      this.velocity.x += 1;
+    }
+  }
 
   game.addGameObject(player);
   game.start();
