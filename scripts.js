@@ -60,6 +60,7 @@ class Player {
       let animation = this.animation - 1;
       let frame = this.frame - 1;
 
+      this
       context.drawImage(
         this.image,
         this.frameWidth * frame,
@@ -155,7 +156,7 @@ class Game {
   gameObjects = [];
 
   start() {
-    var t = this;
+    const t = this;
 
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = window.innerHeight - 200;
@@ -163,9 +164,9 @@ class Game {
 
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 
-    this.interval = setInterval(function () {
+    requestAnimationFrame(function () {
       t.update();
-    }, 20);
+    });
   }
 
   clear() {
@@ -173,12 +174,18 @@ class Game {
   }
 
   update() {
+    const t = this;
+    
     this.clear();
 
     for (let i = 0; i < this.gameObjects.length; ++i) {
       this.gameObjects[i].update();
       this.gameObjects[i].draw(this.context);
     }
+
+    requestAnimationFrame(function () {
+      t.update();
+    });
   }
 
   addGameObject(gameObject) {
