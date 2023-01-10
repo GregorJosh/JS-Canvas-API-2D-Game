@@ -1,6 +1,12 @@
 class Player {
   onUpdate = null;
-  
+  animation = 1;
+  frame = 1;
+  numberOfFrames = 0;
+  numberOfAnimations = 0;
+  frameWidth = 0;
+  frameHeight = 0;
+
   velocity = {
     x: 0,
     y: 0,
@@ -11,7 +17,16 @@ class Player {
     y: 0,
   };
 
-  constructor(x, y, width, height, color, type) {
+  constructor(
+    x,
+    y,
+    width,
+    height,
+    color = null,
+    type = null,
+    numberOfFrames = null,
+    numberOfAnimations = null
+  ) {
     this.position.x = x;
     this.position.y = y;
     this.width = width;
@@ -19,9 +34,16 @@ class Player {
     this.color = color;
     this.type = type;
 
-    if (type == "image") {
+    if (type == "image" || type == "atlas") {
       this.image = new Image();
       this.image.src = color;
+    }
+
+    if (type == "atlas" && numberOfFrames && numberOfAnimations) {
+      this.numberOfFrames = numberOfFrames;
+      this.numberOfAnimations = numberOfAnimations;
+      this.frameWidth = this.image.width / numberOfFrames;
+      this.frameHeight = this.image.height / numberOfAnimations;
     }
   }
 
@@ -34,7 +56,22 @@ class Player {
         this.width,
         this.height
       );
-    } else {
+    } else if (this.type == "atlas") {
+      let animation = this.animation - 1;
+      let frame = this.frame - 1;
+
+      context.drawImage(
+        this.image,
+        this.frameWidth * frame,
+        this.frameHeight * animation,
+        this.frameWidth,
+        this.frameHeight,
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
+    } else if (this.color) {
       context.fillStyle = this.color;
       context.fillRect(
         this.position.x,
@@ -58,27 +95,51 @@ class Player {
     this.velocity.x = 0;
     this.velocity.y = 0;
   }
+
+  animate(animation) {
+    this.animation = animation;
+    this.frame++;
+
+    if (this.frame > this.numberOfFrames) {
+      this.frame = 1;
+    }
+  }
+}
+
+class Input {
+  static keyboard = false;
+
+  static {
+    var t = this;
+
+    window.addEventListener("keydown", function (event) {
+      if (!t.keyboard) {
+        t.keyboard = [];
+      }
+
+      t.keyboard[event.key] = true;
+    });
+
+    window.addEventListener("keyup", function (event) {
+      t.keyboard[event.key] = false;
+    });
+  }
+
+  static getKey(key) {
+    if (this.keyboard && this.keyboard[key]) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }
 
 class Game {
   canvas = document.createElement("canvas");
   gameObjects = [];
-  keys = false;
 
   start() {
     var t = this;
-
-    window.addEventListener("keydown", function (event) {
-      if (!t.keys) {
-        t.keys = [];
-      }
-
-      t.keys[event.key] = true;
-    });
-
-    window.addEventListener("keyup", function (event) {
-      t.keys[event.key] = false;
-    });
 
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = window.innerHeight - 200;
@@ -113,29 +174,38 @@ class Game {
 
 window.onload = function () {
   const game = new Game();
-  const player = new Player(10, 10, 28, 48, "images/skeleton_walk_right.png", "image");
+  const player = new Player(
+    10,
+    10,
+    28,
+    48,
+    "images/skeleton_walk.png",
+    "atlas",
+    9,
+    4
+  );
 
   player.onUpdate = function () {
-    if (this.game.keys && this.game.keys["w"]) {
-      this.image.src = "images/skeleton_walk_up.png";
+    if (Input.getKey("w")) {
       this.velocity.y -= 1;
+      this.animate(1);
     }
 
-    if (this.game.keys && this.game.keys["s"]) {
-      this.image.src = "images/skeleton_walk_down.png";
+    if (Input.getKey("s")) {
       this.velocity.y += 1;
+      this.animate(3);
     }
 
-    if (this.game.keys && this.game.keys["a"]) {
-      this.image.src = "images/skeleton_walk_left.png";
+    if (Input.getKey("a")) {
       this.velocity.x -= 1;
+      this.animate(2);
     }
 
-    if (this.game.keys && this.game.keys["d"]) {
-      this.image.src = "images/skeleton_walk_right.png";
+    if (Input.getKey("d")) {
       this.velocity.x += 1;
+      this.animate(4);
     }
-  }
+  };
 
   game.addGameObject(player);
   game.start();
