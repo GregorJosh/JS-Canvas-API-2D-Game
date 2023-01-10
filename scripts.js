@@ -1,6 +1,12 @@
 class Player {
   onUpdate = null;
-  
+  animation = 1;
+  frame = 1;
+  numberOfFrames = 0;
+  numberOfAnimations = 0;
+  frameWidth = 0;
+  frameHeight = 0;
+
   velocity = {
     x: 0,
     y: 0,
@@ -11,7 +17,16 @@ class Player {
     y: 0,
   };
 
-  constructor(x, y, width, height, color, type) {
+  constructor(
+    x,
+    y,
+    width,
+    height,
+    color = null,
+    type = null,
+    numberOfFrames = null,
+    numberOfAnimations = null
+  ) {
     this.position.x = x;
     this.position.y = y;
     this.width = width;
@@ -19,9 +34,16 @@ class Player {
     this.color = color;
     this.type = type;
 
-    if (type == "image") {
+    if (type == "image" || type == "atlas") {
       this.image = new Image();
       this.image.src = color;
+    }
+
+    if (type == "atlas" && numberOfFrames && numberOfAnimations) {
+      this.numberOfFrames = numberOfFrames;
+      this.numberOfAnimations = numberOfAnimations;
+      this.frameWidth = this.image.width / numberOfFrames;
+      this.frameHeight = this.image.height / numberOfAnimations;
     }
   }
 
@@ -34,7 +56,22 @@ class Player {
         this.width,
         this.height
       );
-    } else {
+    } else if (this.type == "atlas") {
+      let animation = this.animation - 1;
+      let frame = this.frame - 1;
+
+      context.drawImage(
+        this.image,
+        this.frameWidth * frame,
+        this.frameHeight * animation,
+        this.frameWidth,
+        this.frameHeight,
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
+    } else if (this.color) {
       context.fillStyle = this.color;
       context.fillRect(
         this.position.x,
@@ -57,6 +94,15 @@ class Player {
 
     this.velocity.x = 0;
     this.velocity.y = 0;
+  }
+
+  animate(animation) {
+    this.animation = animation;
+    this.frame++;
+
+    if (this.frame > this.numberOfFrames) {
+      this.frame = 1;
+    }
   }
 }
 
@@ -128,29 +174,38 @@ class Game {
 
 window.onload = function () {
   const game = new Game();
-  const player = new Player(10, 10, 28, 48, "images/skeleton_walk_right.png", "image");
+  const player = new Player(
+    10,
+    10,
+    28,
+    48,
+    "images/skeleton_walk.png",
+    "atlas",
+    9,
+    4
+  );
 
   player.onUpdate = function () {
     if (Input.getKey("w")) {
-      this.image.src = "images/skeleton_walk_up.png";
       this.velocity.y -= 1;
+      this.animate(1);
     }
 
     if (Input.getKey("s")) {
-      this.image.src = "images/skeleton_walk_down.png";
       this.velocity.y += 1;
+      this.animate(3);
     }
 
     if (Input.getKey("a")) {
-      this.image.src = "images/skeleton_walk_left.png";
       this.velocity.x -= 1;
+      this.animate(2);
     }
 
     if (Input.getKey("d")) {
-      this.image.src = "images/skeleton_walk_right.png";
       this.velocity.x += 1;
+      this.animate(4);
     }
-  }
+  };
 
   game.addGameObject(player);
   game.start();
