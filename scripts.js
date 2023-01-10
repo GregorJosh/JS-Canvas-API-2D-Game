@@ -60,6 +60,7 @@ class Player {
       let animation = this.animation - 1;
       let frame = this.frame - 1;
 
+      this
       context.drawImage(
         this.image,
         this.frameWidth * frame,
@@ -104,6 +105,22 @@ class Player {
       this.frame = 1;
     }
   }
+
+  moveLeft() {
+    this.velocity.x -= 1;
+  }
+
+  moveRight() {
+    this.velocity.x += 1;
+  }
+
+  moveUp() {
+    this.velocity.y -= 1;
+  }
+
+  moveDown() {
+    this.velocity.y += 1;
+  }
 }
 
 class Input {
@@ -139,7 +156,7 @@ class Game {
   gameObjects = [];
 
   start() {
-    var t = this;
+    const t = this;
 
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = window.innerHeight - 200;
@@ -147,9 +164,9 @@ class Game {
 
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 
-    this.interval = setInterval(function () {
+    requestAnimationFrame(function () {
       t.update();
-    }, 20);
+    });
   }
 
   clear() {
@@ -157,12 +174,18 @@ class Game {
   }
 
   update() {
+    const t = this;
+    
     this.clear();
 
     for (let i = 0; i < this.gameObjects.length; ++i) {
       this.gameObjects[i].update();
       this.gameObjects[i].draw(this.context);
     }
+
+    requestAnimationFrame(function () {
+      t.update();
+    });
   }
 
   addGameObject(gameObject) {
@@ -175,10 +198,10 @@ class Game {
 window.onload = function () {
   const game = new Game();
   const player = new Player(
-    10,
-    10,
-    28,
-    48,
+    50,
+    50,
+    80,
+    100,
     "images/skeleton_walk.png",
     "atlas",
     9,
@@ -187,22 +210,22 @@ window.onload = function () {
 
   player.onUpdate = function () {
     if (Input.getKey("w")) {
-      this.velocity.y -= 1;
+      this.moveUp();
       this.animate(1);
     }
 
     if (Input.getKey("s")) {
-      this.velocity.y += 1;
+      this.moveDown();
       this.animate(3);
     }
 
     if (Input.getKey("a")) {
-      this.velocity.x -= 1;
+      this.moveLeft();
       this.animate(2);
     }
 
     if (Input.getKey("d")) {
-      this.velocity.x += 1;
+      this.moveRight();
       this.animate(4);
     }
   };
