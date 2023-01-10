@@ -60,25 +60,40 @@ class Player {
   }
 }
 
-class Game {
-  canvas = document.createElement("canvas");
-  gameObjects = [];
-  keys = false;
+class Input {
+  static keyboard = false;
 
-  start() {
+  static {
     var t = this;
 
     window.addEventListener("keydown", function (event) {
-      if (!t.keys) {
-        t.keys = [];
+      if (!t.keyboard) {
+        t.keyboard = [];
       }
 
-      t.keys[event.key] = true;
+      t.keyboard[event.key] = true;
     });
 
     window.addEventListener("keyup", function (event) {
-      t.keys[event.key] = false;
+      t.keyboard[event.key] = false;
     });
+  }
+
+  static getKey(key) {
+    if (this.keyboard && this.keyboard[key]) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+}
+
+class Game {
+  canvas = document.createElement("canvas");
+  gameObjects = [];
+
+  start() {
+    var t = this;
 
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = window.innerHeight - 200;
@@ -116,22 +131,22 @@ window.onload = function () {
   const player = new Player(10, 10, 28, 48, "images/skeleton_walk_right.png", "image");
 
   player.onUpdate = function () {
-    if (this.game.keys && this.game.keys["w"]) {
+    if (Input.getKey("w")) {
       this.image.src = "images/skeleton_walk_up.png";
       this.velocity.y -= 1;
     }
 
-    if (this.game.keys && this.game.keys["s"]) {
+    if (Input.getKey("s")) {
       this.image.src = "images/skeleton_walk_down.png";
       this.velocity.y += 1;
     }
 
-    if (this.game.keys && this.game.keys["a"]) {
+    if (Input.getKey("a")) {
       this.image.src = "images/skeleton_walk_left.png";
       this.velocity.x -= 1;
     }
 
-    if (this.game.keys && this.game.keys["d"]) {
+    if (Input.getKey("d")) {
       this.image.src = "images/skeleton_walk_right.png";
       this.velocity.x += 1;
     }
