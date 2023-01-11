@@ -60,7 +60,6 @@ class Player {
       let animation = this.animation - 1;
       let frame = this.frame - 1;
 
-      this
       context.drawImage(
         this.image,
         this.frameWidth * frame,
@@ -72,7 +71,7 @@ class Player {
         this.width,
         this.height
       );
-    } else if (this.color) {
+    } else {
       context.fillStyle = this.color;
       context.fillRect(
         this.position.x,
