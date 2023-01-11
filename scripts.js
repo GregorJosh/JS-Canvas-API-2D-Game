@@ -122,6 +122,20 @@ class Player {
   }
 }
 
+class World {
+  constructor() {
+
+  }
+  
+  update() {
+
+  }
+
+  draw(context) {
+
+  }
+}
+
 class Input {
   static keyboard = false;
 
