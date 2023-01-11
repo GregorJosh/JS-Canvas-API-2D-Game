@@ -57,8 +57,8 @@ class Player {
         this.height
       );
     } else if (this.type == "atlas") {
-      let animation = this.animation - 1;
-      let frame = this.frame - 1;
+      const animation = this.animation - 1;
+      const frame = this.frame - 1;
 
       context.drawImage(
         this.image,
@@ -126,7 +126,7 @@ class Input {
   static keyboard = false;
 
   static {
-    var t = this;
+    const t = this;
 
     window.addEventListener("keydown", function (event) {
       if (!t.keyboard) {
