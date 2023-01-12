@@ -129,14 +129,14 @@ class World {
     image: null,
     tile: {
       width: 0,
-      height: 0
-    }
-  }
+      height: 0,
+    },
+  };
 
   position = {
     x: 0,
-    y: 0
-  }
+    y: 0,
+  };
 
   numOfCols = 0;
   numOfRows = 0;
@@ -158,14 +158,18 @@ class World {
     this.atlas.rows = this.atlas.image.height / tileHeight;
 
     for (let i = 0; i < this.numOfRows; ++i) {
+      const row = [];
+
       for (let j = 0; j < this.numOfCols; ++j) {
         const island = {
-          col: 0,
-          row: 0
-        }
+          col: 2,
+          row: 2,
+        };
 
-        
+        row.push(island);
       }
+
+      this.map.push(row);
     }
   }
 
@@ -173,9 +177,25 @@ class World {
 
   draw(context) {
     for (let i = 0; i < this.map.length; ++i) {
-      context.drawImage(
-        this.atlas.image, 
-        this.atlas.tile.width * this.map[i])
+      for (let j = 0; j < this.map[i].length; ++j) {
+        const atlasPosX = (this.map[i][j].col - 1) * this.atlas.tile.width;
+        const atlasPosY = (this.map[i][j].row - 1) * this.atlas.tile.height;
+
+        const screenPosX = this.position.x + j * this.atlas.tile.width;
+        const screenPosY = this.position.y + i * this.atlas.tile.height;
+
+        context.drawImage(
+          this.atlas.image,
+          atlasPosX,
+          atlasPosY,
+          this.atlas.tile.width,
+          this.atlas.tile.height,
+          screenPosX,
+          screenPosY,
+          this.atlas.tile.width,
+          this.atlas.tile.height
+        );
+      }
     }
   }
 }
@@ -254,7 +274,7 @@ class Game {
 
 window.onload = function () {
   const game = new Game();
-  const world = new World(5, 5, "images/terrain_and_objects.png", 32, 32);
+  const world = new World(60, 40, "images/terrain_and_objects.png", 32, 32);
 
   const player = new Player(
     50,
