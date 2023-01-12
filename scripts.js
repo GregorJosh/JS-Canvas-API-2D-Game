@@ -173,6 +173,8 @@ class World {
     }
   }
 
+  update() {}
+
   draw(context) {
     for (let i = 0; i < this.map.length; ++i) {
       for (let j = 0; j < this.map[i].length; ++j) {
@@ -307,6 +309,7 @@ window.onload = function () {
     }
   };
 
+  game.addGameObject(world);
   game.addGameObject(player);
   game.start();
 };
