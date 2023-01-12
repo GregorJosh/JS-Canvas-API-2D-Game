@@ -57,8 +57,8 @@ class Player {
         this.height
       );
     } else if (this.type == "atlas") {
-      let animation = this.animation - 1;
-      let frame = this.frame - 1;
+      const animation = this.animation - 1;
+      const frame = this.frame - 1;
 
       context.drawImage(
         this.image,
@@ -173,8 +173,6 @@ class World {
     }
   }
 
-  update() {}
-
   draw(context) {
     for (let i = 0; i < this.map.length; ++i) {
       for (let j = 0; j < this.map[i].length; ++j) {
@@ -204,7 +202,7 @@ class Input {
   static keyboard = false;
 
   static {
-    var t = this;
+    const t = this;
 
     window.addEventListener("keydown", function (event) {
       if (!t.keyboard) {
@@ -252,7 +250,7 @@ class Game {
 
   update() {
     const t = this;
-
+    
     this.clear();
 
     for (let i = 0; i < this.gameObjects.length; ++i) {
@@ -275,7 +273,7 @@ class Game {
 window.onload = function () {
   const game = new Game();
   const world = new World(60, 40, "images/terrain_and_objects.png", 32, 32);
-
+  
   const player = new Player(
     50,
     50,
@@ -309,7 +307,6 @@ window.onload = function () {
     }
   };
 
-  game.addGameObject(world);
   game.addGameObject(player);
   game.start();
 };
