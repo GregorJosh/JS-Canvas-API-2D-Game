@@ -123,16 +123,60 @@ class Player {
 }
 
 class World {
-  constructor() {
-
+  atlas = {
+    cols: 0,
+    rows: 0,
+    image: null,
+    tile: {
+      width: 0,
+      height: 0
+    }
   }
-  
-  update() {
 
+  position = {
+    x: 0,
+    y: 0
   }
+
+  numOfCols = 0;
+  numOfRows = 0;
+  numOfIslands = 0;
+  map = [];
+
+  constructor(cols, rows, atlas, tileWidth, tileHeight) {
+    this.numOfCols = cols;
+    this.numOfRows = rows;
+    this.numOfIslands = cols * rows;
+
+    this.atlas.image = new Image();
+    this.atlas.image.src = atlas;
+
+    this.atlas.tile.width = tileWidth;
+    this.atlas.tile.height = tileHeight;
+
+    this.atlas.cols = this.atlas.image.width / tileWidth;
+    this.atlas.rows = this.atlas.image.height / tileHeight;
+
+    for (let i = 0; i < this.numOfRows; ++i) {
+      for (let j = 0; j < this.numOfCols; ++j) {
+        const island = {
+          col: 0,
+          row: 0
+        }
+
+        
+      }
+    }
+  }
+
+  update() {}
 
   draw(context) {
-
+    for (let i = 0; i < this.map.length; ++i) {
+      context.drawImage(
+        this.atlas.image, 
+        this.atlas.tile.width * this.map[i])
+    }
   }
 }
 
@@ -188,7 +232,7 @@ class Game {
 
   update() {
     const t = this;
-    
+
     this.clear();
 
     for (let i = 0; i < this.gameObjects.length; ++i) {
@@ -210,6 +254,8 @@ class Game {
 
 window.onload = function () {
   const game = new Game();
+  const world = new World(5, 5, "images/terrain_and_objects.png", 32, 32);
+
   const player = new Player(
     50,
     50,
@@ -243,6 +289,7 @@ window.onload = function () {
     }
   };
 
+  game.addGameObject(world);
   game.addGameObject(player);
   game.start();
 };
