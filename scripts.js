@@ -228,9 +228,19 @@ class Input {
   }
 }
 
+class Scene {
+  gameObjects = [];
+
+  update() {}
+
+  draw(context) {}
+}
+
 class Game {
   canvas = document.createElement("canvas");
   gameObjects = [];
+  scenes = [];
+  scene = 0;
 
   start() {
     const t = this;
@@ -258,6 +268,9 @@ class Game {
     for (let i = 0; i < this.gameObjects.length; ++i) {
       this.gameObjects[i].update();
       this.gameObjects[i].draw(this.context);
+
+      //this.scenes[scene].update();
+      //this.scenes[scene].draw(this.context);
     }
 
     requestAnimationFrame(function () {
