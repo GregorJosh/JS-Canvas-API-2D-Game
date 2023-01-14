@@ -1,128 +1,158 @@
-class Player {
-  onUpdate = null;
-  animation = 1;
-  frame = 1;
-  numberOfFrames = 0;
-  numberOfAnimations = 0;
-  frameWidth = 0;
-  frameHeight = 0;
+class Component {}
 
-  velocity = {
-    x: 0,
-    y: 0,
-  };
-
+class Transform extends Component {
   position = {
     x: 0,
     y: 0,
   };
 
-  constructor(
-    x,
-    y,
-    width,
-    height,
-    color = null,
-    type = null,
-    numberOfFrames = null,
-    numberOfAnimations = null
-  ) {
-    this.position.x = x;
-    this.position.y = y;
+  scale = {
+    x: 1,
+    y: 1,
+  };
+
+  rotation = 0;
+}
+
+class GameObject {
+  position = {
+    x: 0,
+    y: 0,
+  };
+
+  width = 0;
+  height = 0;
+
+  transform = null;
+
+  constructor(x, y, width, height) {
+    this.transform = new Transform();
+
+    this.position.x = this.transform.position.x = x;
+    this.position.y = this.transform.position.y = y;
+
     this.width = width;
     this.height = height;
-    this.color = color;
-    this.type = type;
+  }
 
-    if (type == "image" || type == "atlas") {
-      this.image = new Image();
-      this.image.src = color;
+  update() {}
+
+  draw(context) {}
+}
+
+class Img extends GameObject {
+  image = null;
+
+  constructor(x, y, width, height, image) {
+    super(x, y, width, height);
+
+    this.image = new Image();
+    this.image.src = image;
+  }
+
+  draw(context) {
+    context.drawImage(
+      this.image,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height
+    );
+  }
+}
+
+class Button extends GameObject {
+  onClick = null;
+  label = " ";
+
+  constructor(x, y, width, height, color, label) {
+    if (typeof(x) == "string") {
+      x = 0;
     }
 
-    if (type == "atlas" && numberOfFrames && numberOfAnimations) {
-      this.numberOfFrames = numberOfFrames;
-      this.numberOfAnimations = numberOfAnimations;
-      this.frameWidth = this.image.width / numberOfFrames;
-      this.frameHeight = this.image.height / numberOfAnimations;
+    if (typeof(y) == "string") {
+      y = 0;
+    }
+
+
+    super(x, y, width, height);
+
+    this.color = color;
+    this.label = label;
+  }
+
+  update() {
+    super.update();
+
+    if (Input.getButton("left")) {
+      if (
+        Input.mouse.x > this.position.x && 
+        Input.mouse.x < this.position.x + this.width &&
+        Input.mouse.y > this.position.y &&
+        Input.mouse.y < this.position.y + this.height
+        ) {
+          this.onClick();
+        } 
     }
   }
 
   draw(context) {
-    if (this.type == "image") {
-      context.drawImage(
-        this.image,
-        this.position.x,
-        this.position.y,
-        this.width,
-        this.height
-      );
-    } else if (this.type == "atlas") {
-      const animation = this.animation - 1;
-      const frame = this.frame - 1;
-
-      context.drawImage(
-        this.image,
-        this.frameWidth * frame,
-        this.frameHeight * animation,
-        this.frameWidth,
-        this.frameHeight,
-        this.position.x,
-        this.position.y,
-        this.width,
-        this.height
-      );
-    } else {
-      context.fillStyle = this.color;
-      context.fillRect(
-        this.position.x,
-        this.position.y,
-        this.width,
-        this.height
-      );
-    }
+    context.fillRect(this.position.x, this.position.y, this.width, this.height);
+    context.strokeStyle = this.color;
+    context.font = this.height + "px serif";
+    context.textAlign = "left";
+    context.textBaseline = "top";
+    context.strokeText(this.label, this.position.x, this.position.y, this.width);
   }
+}
 
-  // Metoda Update jest wywoływana po przypisaniu wskaźnika do obiektu gry!
+class Sprite extends GameObject {
+  onUpdate = null;
+  atlas = null;
+  animation = 1;
+  frame = 1;
+  numOfFrames = 0;
+  numOfAnims = 0;
+  frameWidth = 0;
+  frameHeight = 0;
 
-  update() {
-    if (this.onUpdate) {
-      this.onUpdate();
-    }
+  constructor(x, y, width, height, atlas, numOfFrames, numOfAnims) {
+    super(x, y, width, height);
 
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
+    this.atlas = new Image();
+    this.atlas.src = atlas;
 
-    this.velocity.x = 0;
-    this.velocity.y = 0;
+    this.numOfFrames = numOfFrames;
+    this.numOfAnims = numOfAnims;
+    this.frameWidth = this.atlas.width / numOfFrames;
+    this.frameHeight = this.atlas.height / numOfAnims;
   }
 
   animate(animation) {
     this.animation = animation;
     this.frame++;
 
-    if (this.frame > this.numberOfFrames) {
+    if (this.frame > this.numOfFrames) {
       this.frame = 1;
     }
   }
 
-  moveLeft() {
-    this.velocity.x -= 1;
-  }
-
-  moveRight() {
-    this.velocity.x += 1;
-  }
-
-  moveUp() {
-    this.velocity.y -= 1;
-  }
-
-  moveDown() {
-    this.velocity.y += 1;
+  draw(context) {
+    context.drawImage(
+      this.atlas,
+      this.frameWidth * (this.frame - 1),
+      this.frameHeight * (this.animation - 1),
+      this.frameWidth,
+      this.frameHeight,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height
+    );
   }
 }
 
-class World {
+class TileMap extends GameObject {
   atlas = {
     cols: 0,
     rows: 0,
@@ -133,17 +163,14 @@ class World {
     },
   };
 
-  position = {
-    x: 0,
-    y: 0,
-  };
-
   numOfCols = 0;
   numOfRows = 0;
   numOfIslands = 0;
   map = [];
 
   constructor(cols, rows, atlas, tileWidth, tileHeight) {
+    super(0, 0, tileWidth * cols, tileHeight * rows);
+
     this.numOfCols = cols;
     this.numOfRows = rows;
     this.numOfIslands = cols * rows;
@@ -200,51 +227,126 @@ class World {
   }
 }
 
+class Character extends Sprite {
+  velocity = {
+    x: 0,
+    y: 0,
+  };
+
+  update() {
+    if (this.onUpdate) {
+      this.onUpdate();
+    }
+
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+
+    this.velocity.x = 0;
+    this.velocity.y = 0;
+  }
+
+  moveLeft() {
+    this.velocity.x -= 1;
+  }
+
+  moveRight() {
+    this.velocity.x += 1;
+  }
+
+  moveUp() {
+    this.velocity.y -= 1;
+  }
+
+  moveDown() {
+    this.velocity.y += 1;
+  }
+}
+
 class Input {
-  static keyboard = false;
+  static keys = false;
+  static buttons = false;
+
+  static mouse = {
+    x: 0,
+    y: 0
+  };
 
   static {
     const t = this;
 
     window.addEventListener("keydown", function (event) {
-      if (!t.keyboard) {
-        t.keyboard = [];
+      if (!t.keys) {
+        t.keys = [];
       }
 
-      t.keyboard[event.key] = true;
+      t.keys[event.key] = true;
     });
 
     window.addEventListener("keyup", function (event) {
-      t.keyboard[event.key] = false;
+      t.keys[event.key] = false;
+    });
+
+    window.addEventListener("mousedown", function (event) {
+      if (!t.buttons) {
+        t.buttons = [];
+      }
+
+      t.buttons[t.getButtonName(event.button)] = true;
+      t.mouse.x = event.x;
+      t.mouse.y = event.y;
+    });
+
+    window.addEventListener("mouseup", function (event) {
+      t.buttons[t.getButtonName(event.button)] = false;
     });
   }
 
   static getKey(key) {
-    if (this.keyboard && this.keyboard[key]) {
+    if (this.keys && this.keys[key]) {
       return true;
     } else {
       return false;
     }
   }
+
+  static getButton(button) {
+    if (this.buttons && this.buttons[button]) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  static getButtonName(button) {
+    let name;
+
+    switch (button) {
+      case 0:
+        name = "left";
+        break;
+      case 1:
+        name = "middle";
+        break;
+      case 2:
+        name = "right";
+        break;
+      default:
+        name = "left";
+    }
+
+    return name;
+  }
 }
 
 class Scene {
+  canvas = null;
+  context = null;
   gameObjects = [];
-
-  update() {}
-
-  draw(context) {}
-}
-
-class Game {
-  canvas = document.createElement("canvas");
-  gameObjects = [];
-  scenes = [];
-  scene = 0;
 
   start() {
     const t = this;
 
+    this.canvas = document.createElement("canvas");
     this.canvas.width = document.body.clientWidth;
     this.canvas.height = window.innerHeight - 200;
     this.context = this.canvas.getContext("2d");
@@ -252,50 +354,95 @@ class Game {
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 
     requestAnimationFrame(function () {
-      t.update();
+      t.animationFrame();
     });
+  }
+
+  animationFrame() {
+    const t = this;
+
+    this.update();
+    this.draw();
+
+    requestAnimationFrame(function () {
+      t.animationFrame();
+    });
+  }
+
+  update() {
+    for (let i = 0; i < this.gameObjects.length; ++i) {
+      this.gameObjects[i].update();
+    }
   }
 
   clear() {
     this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
-  update() {
-    const t = this;
-    
+  draw() {
     this.clear();
 
     for (let i = 0; i < this.gameObjects.length; ++i) {
-      this.gameObjects[i].update();
       this.gameObjects[i].draw(this.context);
-
-      //this.scenes[scene].update();
-      //this.scenes[scene].draw(this.context);
     }
-
-    requestAnimationFrame(function () {
-      t.update();
-    });
   }
 
   addGameObject(gameObject) {
-    gameObject.game = this;
+    gameObject.scene = this;
+    gameObject.game = this.game;
 
     this.gameObjects.push(gameObject);
   }
 }
 
-window.onload = function () {
+class Game {
+  scenes = [];
+  scene = 0;
+
+  constructor() {
+    document.body.style.backgroundColor = "black";
+  }
+
+  start(scene) {
+    this.scene = scene;
+    this.scenes[this.scene].start();
+  }
+
+  get(scene) {
+    return this.scenes[scene];
+  }
+
+  set(scene) {
+    this.scene = scene;
+  }
+
+  addScene(scene) {
+    this.scenes.push(scene);
+  }
+}
+
+onload = function () {
   const game = new Game();
-  const world = new World(60, 40, "images/terrain_and_objects.png", 32, 32);
-  
-  const player = new Player(
+
+  const mainMenu = new Scene();
+  const mainMenuBg = new Img(0, 0, 1418, 766, "images/bg.png");
+  const button = new Button("center", "middle", 200, 50, "red", "Start Game");
+
+  button.onClick = function () {
+    game.start(1);
+  };
+
+  mainMenu.addGameObject(mainMenuBg);
+  mainMenu.addGameObject(button);
+
+  const level1 = new Scene();
+  const world = new TileMap(60, 40, "images/terrain_and_objects.png", 32, 32);
+  const player = new Character(
     50,
     50,
     80,
     100,
     "images/skeleton_walk.png",
-    "atlas",
     9,
     4
   );
@@ -322,7 +469,10 @@ window.onload = function () {
     }
   };
 
-  game.addGameObject(world);
-  game.addGameObject(player);
-  game.start();
+  level1.addGameObject(world);
+  level1.addGameObject(player);
+
+  game.addScene(mainMenu);
+  game.addScene(level1);
+  game.start(0);
 };
