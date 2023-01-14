@@ -62,6 +62,7 @@ class Img extends GameObject {
 }
 
 class Button extends GameObject {
+  mouseOver = false;
   onClick = null;
   label = " ";
 
@@ -82,23 +83,30 @@ class Button extends GameObject {
   }
 
   update() {
-    super.update();
+    this.mouseOver = false;
 
-    if (Input.getButton("left")) {
-      if (
-        Input.mouse.x > this.position.x && 
-        Input.mouse.x < this.position.x + this.width &&
-        Input.mouse.y > this.position.y &&
-        Input.mouse.y < this.position.y + this.height
-        ) {
-          this.onClick();
-        } 
+    if (
+      Input.mouse.x > this.position.x && 
+      Input.mouse.x < this.position.x + this.width &&
+      Input.mouse.y > this.position.y &&
+      Input.mouse.y < this.position.y + this.height
+      ) {
+        this.mouseOver = true;
+    }
+
+    if (Input.getButton("left") && this.mouseOver) {
+      this.onClick();
     }
   }
 
   draw(context) {
     context.fillRect(this.position.x, this.position.y, this.width, this.height);
     context.strokeStyle = this.color;
+
+    if (this.mouseOver) {
+      context.strokeRect(this.position.x, this.position.y, this.width, this.height);
+    }
+
     context.font = this.height + "px serif";
     context.textAlign = "left";
     context.textBaseline = "top";
@@ -292,13 +300,16 @@ class Input {
       }
 
       t.buttons[t.getButtonName(event.button)] = true;
-      t.mouse.x = event.x;
-      t.mouse.y = event.y;
     });
 
     window.addEventListener("mouseup", function (event) {
       t.buttons[t.getButtonName(event.button)] = false;
     });
+
+    window.addEventListener("mousemove", function(event) {
+      t.mouse.x = event.x;
+      t.mouse.y = event.y;
+    })
   }
 
   static getKey(key) {
@@ -339,9 +350,12 @@ class Input {
 }
 
 class Scene {
+  game = null;
   canvas = null;
   context = null;
   gameObjects = [];
+  animationFrameReqID = 0;
+
 
   start() {
     const t = this;
@@ -353,9 +367,18 @@ class Scene {
 
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 
-    requestAnimationFrame(function () {
+    this.animationFrameReqID = requestAnimationFrame(function () {
       t.animationFrame();
     });
+  }
+
+  stop() {
+    if (this.canvas) {
+      cancelAnimationFrame(this.animationFrameReqID);
+
+      this.context = null;
+      this.canvas.remove();
+    }
   }
 
   animationFrame() {
@@ -364,7 +387,7 @@ class Scene {
     this.update();
     this.draw();
 
-    requestAnimationFrame(function () {
+    this.animationFrameReqID = requestAnimationFrame(function () {
       t.animationFrame();
     });
   }
@@ -396,28 +419,27 @@ class Scene {
 }
 
 class Game {
-  scenes = [];
-  scene = 0;
+  #scenes = [];
+  #scene = 0;
 
   constructor() {
     document.body.style.backgroundColor = "black";
   }
 
-  start(scene) {
-    this.scene = scene;
-    this.scenes[this.scene].start();
+  start(newScene) {
+    this.#scenes[this.#scene].stop();
+    this.#scene = newScene;
+    this.#scenes[this.#scene].start();
   }
 
   get(scene) {
-    return this.scenes[scene];
-  }
-
-  set(scene) {
-    this.scene = scene;
+    return this.#scenes[scene];
   }
 
   addScene(scene) {
-    this.scenes.push(scene);
+    scene.game = this;
+
+    this.#scenes.push(scene);
   }
 }
 
@@ -426,7 +448,7 @@ onload = function () {
 
   const mainMenu = new Scene();
   const mainMenuBg = new Img(0, 0, 1418, 766, "images/bg.png");
-  const button = new Button("center", "middle", 200, 50, "red", "Start Game");
+  const button = new Button("center", "middle", 300, 200, "red", "Start Game");
 
   button.onClick = function () {
     game.start(1);
