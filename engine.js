@@ -1,4 +1,6 @@
-class Component {}
+class Component {
+  constructor() {}
+}
 
 class Transform extends Component {
   position = {
@@ -23,28 +25,130 @@ class GameObject {
   width = 0;
   height = 0;
 
-  transform = null;
+  game = null;
 
-  constructor(x, y, width, height) {
+  transform = null;
+  onUpdate = null;
+
+  constructor(game, x, y, width, height) {
     this.transform = new Transform();
 
-    this.position.x = this.transform.position.x = x;
-    this.position.y = this.transform.position.y = y;
+    this.game = game;
+
+    this.position.x = x;
+    this.position.y = y;
 
     this.width = width;
     this.height = height;
   }
 
-  update() {}
+  update() {
+    if (this.onUpdate) {
+      this.onUpdate();
+    }
 
-  draw(context) {}
+    if (this.position.x == "center") {
+      this.position.x = this.game.getScene().canvas.width / 2;
+      this.position.x -= this.width / 2;
+    }
+
+    if (this.position.y == "middle") {
+      this.position.y = this.game.getScene().canvas.height / 2;
+      this.position.y -= this.height / 2;
+    }
+
+    this.transform.position.x = this.position.x;
+    this.transform.position.y = this.position.y;
+  }
+}
+
+class Rectangle extends GameObject {
+  background = "black";
+  color = null;
+  gameObject = null;
+
+  constructor(
+    game,
+    x,
+    y,
+    width,
+    height,
+    bg = null,
+    color = null,
+    gameObject = null
+  ) {
+    super(game, x, y, width, height);
+
+    if (bg) {
+      this.background = bg;
+    }
+
+    if (color) {
+      this.color = color;
+    }
+
+    if (gameObject) {
+      this.gameObject = gameObject;
+    }
+  }
+
+  update() {
+    super.update();
+  }
+
+  draw(context) {
+    context.fillStyle = this.background;
+    context.fillRect(this.position.x, this.position.y, this.width, this.height);
+
+    if (this.color) {
+      context.strokeStyle = this.color;
+      context.strokeRect(
+        this.position.x,
+        this.position.y,
+        this.width,
+        this.height
+      );
+    }
+  }
+}
+
+class Label extends GameObject {
+  x = 0;
+  y = 0;
+  text = "Label";
+  align = "center";
+  gameObject = null;
+
+  constructor(game, x, y, gameObject = null) {
+    super(game, x, y, 0, 0);
+
+    if (gameObject) {
+      this.gameObject = gameObject;
+    }
+
+    this.x = x;
+    this.y = y;
+  }
+
+  draw(context) {
+    this.x = this.gameObject.position.x + this.gameObject.width / 2;
+    this.y = this.gameObject.position.y + this.gameObject.height / 2;
+
+    context.font = this.gameObject.height + "px serif";
+
+    context.textAlign = this.align;
+    context.textBaseline = "middle";
+
+    context.fillStyle = this.gameObject.color;
+    context.fillText(this.text, this.x, this.y, this.gameObject.width);
+  }
 }
 
 class Img extends GameObject {
   image = null;
 
-  constructor(x, y, width, height, image) {
-    super(x, y, width, height);
+  constructor(game, x, y, width, height, image) {
+    super(game, x, y, width, height);
 
     this.image = new Image();
     this.image.src = image;
@@ -62,55 +166,110 @@ class Img extends GameObject {
 }
 
 class Button extends GameObject {
+  color = "red";
+  background = "black";
   mouseOver = false;
   onClick = null;
-  label = " ";
+  rectangle = null;
+  label = null;
 
-  constructor(x, y, width, height, color, label) {
-    if (typeof(x) == "string") {
-      x = 0;
+  constructor(game, x, y, width, height, text, color = null) {
+    super(game, x, y, width, height);
+
+    this.rectangle = new Rectangle(
+      game,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height,
+      this.background,
+      0,
+      this
+    );
+
+    this.label = new Label(game, x, y, this);
+    this.label.text = text;
+
+    if (color) {
+      this.color = color;
     }
-
-    if (typeof(y) == "string") {
-      y = 0;
-    }
-
-
-    super(x, y, width, height);
-
-    this.color = color;
-    this.label = label;
   }
 
   update() {
+    super.update();
+
     this.mouseOver = false;
+    this.rectangle.color = false;
 
     if (
-      Input.mouse.x > this.position.x && 
+      Input.mouse.x > this.position.x &&
       Input.mouse.x < this.position.x + this.width &&
       Input.mouse.y > this.position.y &&
       Input.mouse.y < this.position.y + this.height
-      ) {
-        this.mouseOver = true;
+    ) {
+      this.mouseOver = true;
     }
 
     if (Input.getButton("left") && this.mouseOver) {
       this.onClick();
     }
+
+    this.rectangle.update();
+    this.label.update();
   }
 
   draw(context) {
-    context.fillRect(this.position.x, this.position.y, this.width, this.height);
-    context.strokeStyle = this.color;
-
     if (this.mouseOver) {
-      context.strokeRect(this.position.x, this.position.y, this.width, this.height);
+      this.rectangle.color = this.color;
     }
 
-    context.font = this.height + "px serif";
-    context.textAlign = "left";
-    context.textBaseline = "top";
-    context.strokeText(this.label, this.position.x, this.position.y, this.width);
+    this.rectangle.draw(context);
+    this.label.draw(context);
+  }
+}
+
+class TextField extends GameObject {
+  background = "black";
+  color = "white";
+  onUpdate = null;
+  rectangle = null;
+  label = null;
+
+  constructor(game, x, y, width, height, color = null, bg = null) {
+    super(game, x, y, width, height);
+
+    if (bg) {
+      this.background = bg;
+    }
+
+    if (color) {
+      this.color = color;
+    }
+
+    this.rectangle = new Rectangle(
+      game,
+      this.position.x,
+      this.position.y,
+      this.width,
+      this.height,
+      this.background,
+      0, 
+      this
+    );
+
+    this.label = new Label(game, x, y, this);
+  }
+
+  update() {
+    super.update();
+
+    this.rectangle.update();
+    this.label.update();
+  }
+
+  draw(context) {
+    this.rectangle.draw(context);
+    this.label.draw(context);
   }
 }
 
@@ -124,8 +283,8 @@ class Sprite extends GameObject {
   frameWidth = 0;
   frameHeight = 0;
 
-  constructor(x, y, width, height, atlas, numOfFrames, numOfAnims) {
-    super(x, y, width, height);
+  constructor(game, x, y, width, height, atlas, numOfFrames, numOfAnims) {
+    super(game, x, y, width, height);
 
     this.atlas = new Image();
     this.atlas.src = atlas;
@@ -176,8 +335,8 @@ class TileMap extends GameObject {
   numOfIslands = 0;
   map = [];
 
-  constructor(cols, rows, atlas, tileWidth, tileHeight) {
-    super(0, 0, tileWidth * cols, tileHeight * rows);
+  constructor(game, cols, rows, atlas, tileWidth, tileHeight) {
+    super(game, 0, 0, tileWidth * cols, tileHeight * rows);
 
     this.numOfCols = cols;
     this.numOfRows = rows;
@@ -207,8 +366,6 @@ class TileMap extends GameObject {
       this.map.push(row);
     }
   }
-
-  update() {}
 
   draw(context) {
     for (let i = 0; i < this.map.length; ++i) {
@@ -242,9 +399,7 @@ class Character extends Sprite {
   };
 
   update() {
-    if (this.onUpdate) {
-      this.onUpdate();
-    }
+    super.update();
 
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
@@ -276,7 +431,7 @@ class Input {
 
   static mouse = {
     x: 0,
-    y: 0
+    y: 0,
   };
 
   static {
@@ -306,10 +461,10 @@ class Input {
       t.buttons[t.getButtonName(event.button)] = false;
     });
 
-    window.addEventListener("mousemove", function(event) {
+    window.addEventListener("mousemove", function (event) {
       t.mouse.x = event.x;
       t.mouse.y = event.y;
-    })
+    });
   }
 
   static getKey(key) {
@@ -349,26 +504,32 @@ class Input {
   }
 }
 
-class Scene {
+class Scene extends GameObject {
   game = null;
   canvas = null;
   context = null;
   gameObjects = [];
   animationFrameReqID = 0;
+  oldTimeStamp = 0;
 
+  constructor(game) {
+    super(game, 0, 0, 0, 0);
+  }
 
   start() {
     const t = this;
 
     this.canvas = document.createElement("canvas");
-    this.canvas.width = document.body.clientWidth;
-    this.canvas.height = window.innerHeight - 200;
+    this.width = this.canvas.width = innerWidth;
+    this.height = this.canvas.height = innerHeight;
     this.context = this.canvas.getContext("2d");
 
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+    document.body.style.overflow = "hidden";
+    document.body.style.margin = "0px";
 
-    this.animationFrameReqID = requestAnimationFrame(function () {
-      t.animationFrame();
+    this.animationFrameReqID = requestAnimationFrame(function (timeStamp) {
+      t.animationFrame(timeStamp);
     });
   }
 
@@ -378,23 +539,37 @@ class Scene {
 
       this.context = null;
       this.canvas.remove();
+      this.canvas = null;
     }
   }
 
-  animationFrame() {
-    const t = this;
+  animationFrame(timeStamp) {
+    if (this.context) {
+      const t = this;
+      const frameDuration = timeStamp - this.oldTimeStamp;
+      const frameDurSeconds = frameDuration / 1000;
+      const fps = 1 / frameDurSeconds;
 
-    this.update();
-    this.draw();
+      this.oldTimeStamp = timeStamp;
 
-    this.animationFrameReqID = requestAnimationFrame(function () {
-      t.animationFrame();
-    });
+      this.game.fps = Math.round(fps);
+
+      this.update();
+      this.draw();
+
+      this.animationFrameReqID = requestAnimationFrame(function (timeStamp) {
+        t.animationFrame(timeStamp);
+      });
+    }
   }
 
   update() {
-    for (let i = 0; i < this.gameObjects.length; ++i) {
-      this.gameObjects[i].update();
+    super.update();
+
+    if (this.context) {
+      for (let i = 0; i < this.gameObjects.length; ++i) {
+        this.gameObjects[i].update();
+      }
     }
   }
 
@@ -403,98 +578,43 @@ class Scene {
   }
 
   draw() {
-    this.clear();
+    if (this.context) {
+      this.clear();
 
-    for (let i = 0; i < this.gameObjects.length; ++i) {
-      this.gameObjects[i].draw(this.context);
+      for (let i = 0; i < this.gameObjects.length; ++i) {
+        this.gameObjects[i].draw(this.context);
+      }
     }
   }
 
   addGameObject(gameObject) {
-    gameObject.scene = this;
-    gameObject.game = this.game;
-
     this.gameObjects.push(gameObject);
   }
 }
 
 class Game {
-  #scenes = [];
-  #scene = 0;
+  fps = 0;
+  scenes = [];
+  scene = 0;
 
   constructor() {
     document.body.style.backgroundColor = "black";
+    document.body.style.padding = "none";
   }
 
   start(newScene) {
-    this.#scenes[this.#scene].stop();
-    this.#scene = newScene;
-    this.#scenes[this.#scene].start();
+    this.scenes[this.scene].stop();
+    this.scene = newScene;
+    this.scenes[this.scene].start();
   }
 
-  get(scene) {
-    return this.#scenes[scene];
+  getScene() {
+    return this.scenes[this.scene];
   }
 
-  addScene(scene) {
-    scene.game = this;
+  addScene(newScene) {
+    newScene.game = this;
 
-    this.#scenes.push(scene);
+    this.scenes.push(newScene);
   }
 }
-
-onload = function () {
-  const game = new Game();
-
-  const mainMenu = new Scene();
-  const mainMenuBg = new Img(0, 0, 1418, 766, "images/bg.png");
-  const button = new Button("center", "middle", 300, 200, "red", "Start Game");
-
-  button.onClick = function () {
-    game.start(1);
-  };
-
-  mainMenu.addGameObject(mainMenuBg);
-  mainMenu.addGameObject(button);
-
-  const level1 = new Scene();
-  const world = new TileMap(60, 40, "images/terrain_and_objects.png", 32, 32);
-  const player = new Character(
-    50,
-    50,
-    80,
-    100,
-    "images/skeleton_walk.png",
-    9,
-    4
-  );
-
-  player.onUpdate = function () {
-    if (Input.getKey("w")) {
-      this.moveUp();
-      this.animate(1);
-    }
-
-    if (Input.getKey("s")) {
-      this.moveDown();
-      this.animate(3);
-    }
-
-    if (Input.getKey("a")) {
-      this.moveLeft();
-      this.animate(2);
-    }
-
-    if (Input.getKey("d")) {
-      this.moveRight();
-      this.animate(4);
-    }
-  };
-
-  level1.addGameObject(world);
-  level1.addGameObject(player);
-
-  game.addScene(mainMenu);
-  game.addScene(level1);
-  game.start(0);
-};
