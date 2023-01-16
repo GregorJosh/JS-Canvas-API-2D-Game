@@ -2,22 +2,39 @@ onload = function () {
   const game = new Game();
 
   const mainMenu = new Scene(game);
-  const mainMenuBg = new Img(game, "center", 0, 1418, 766, "images/bg.png");
+  const mainMenuBg = new Img(
+    game,
+    "center",
+    0,
+    mainMenu.width,
+    mainMenu.height,
+    "images/bg.png"
+  );
 
-  const button = new Button(game, "center", "middle", 300, 80, "Start Game", "red");
+  const button = new Button(
+    game,
+    "center",
+    "middle",
+    450,
+    50,
+    "Start Game",
+    "red"
+  );
   button.onClick = function () {
     game.start(1);
   };
 
-  const fps = new TextField(game, 10, 10, 200, 25, "red");
+  const fps = new TextField(game, 10, 10, 200, 25, "blue");
+  fps.label.align = "left";
   fps.onUpdate = function () {
     this.label.text = "FPS: " + game.fps;
-  }
+  };
 
   const mouseXY = new TextField(game, 10, 45, 200, 25, "blue");
+  mouseXY.label.align = "left";
   mouseXY.onUpdate = function () {
     this.label.text = "Mouse: " + Input.mouse.x + ":" + Input.mouse.y;
-  }
+  };
 
   mainMenu.addGameObject(mainMenuBg);
   mainMenu.addGameObject(button);
@@ -29,9 +46,16 @@ onload = function () {
     if (Input.getKey("Escape")) {
       game.start(0);
     }
-  }
+  };
 
-  const world = new TileMap(game, 60, 40, "images/terrain_and_objects.png", 32, 32);
+  const world = new TileMap(
+    game,
+    60,
+    40,
+    "images/terrain_and_objects.png",
+    32,
+    32
+  );
 
   const player = new Character(
     game,
