@@ -113,11 +113,13 @@ class Rectangle extends GameObject {
 }
 
 class Label extends GameObject {
+  gameObject = null;
   x = 0;
   y = 0;
   text = "Label";
   align = "center";
-  gameObject = null;
+  baseline = "middle";
+  font = "serif";
 
   constructor(game, x, y, gameObject = null) {
     super(game, x, y, 0, 0);
@@ -130,14 +132,37 @@ class Label extends GameObject {
     this.y = y;
   }
 
-  draw(context) {
-    this.x = this.gameObject.position.x + this.gameObject.width / 2;
-    this.y = this.gameObject.position.y + this.gameObject.height / 2;
+  update() {
+    super.update();
 
-    context.font = this.gameObject.height + "px serif";
+    switch (this.align) {
+      case "left":
+        this.x = this.gameObject.position.x;
+        break;
+      case "center":
+        this.x = this.gameObject.position.x + this.gameObject.width / 2;
+        break;
+      case "right":
+        this.x = this.gameObject.position.x + this.gameObject.width;
+    }
+
+    switch (this.baseline) {
+      case "top":
+        this.y = this.gameObject.position.y;
+        break;
+      case "middle":
+        this.y = this.gameObject.position.y + this.gameObject.height / 2;
+        break;
+      case "bottom":
+        this.y = this.gameObject.position.y + this.gameObject.height;
+    }
+  }
+
+  draw(context) {
+    context.font = this.gameObject.height + "px " + this.font;
 
     context.textAlign = this.align;
-    context.textBaseline = "middle";
+    context.textBaseline = this.baseline;
 
     context.fillStyle = this.gameObject.color;
     context.fillText(this.text, this.x, this.y, this.gameObject.width);
@@ -253,7 +278,7 @@ class TextField extends GameObject {
       this.width,
       this.height,
       this.background,
-      0, 
+      0,
       this
     );
 
@@ -514,11 +539,11 @@ class Scene extends GameObject {
 
   constructor(game) {
     super(game, 0, 0, 0, 0);
+
+    this.init();
   }
 
-  start() {
-    const t = this;
-
+  init() {
     this.canvas = document.createElement("canvas");
     this.width = this.canvas.width = innerWidth;
     this.height = this.canvas.height = innerHeight;
@@ -527,6 +552,14 @@ class Scene extends GameObject {
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
     document.body.style.overflow = "hidden";
     document.body.style.margin = "0px";
+  }
+
+  start() {
+    const t = this;
+
+    if (!this.canvas) {
+      this.init();
+    }
 
     this.animationFrameReqID = requestAnimationFrame(function (timeStamp) {
       t.animationFrame(timeStamp);
