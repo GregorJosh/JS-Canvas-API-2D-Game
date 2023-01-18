@@ -1,10 +1,11 @@
 onload = function () {
+  const color1 = "#7B6662";
   const game = new Game();
 
   const mainMenu = new Scene(game);
   const mainMenuBg = new Img(
     game,
-    "center",
+    0,
     0,
     mainMenu.width,
     mainMenu.height,
@@ -15,24 +16,23 @@ onload = function () {
     game,
     "center",
     "middle",
-    450,
+    300,
     50,
     "Start Game",
-    "red"
+    "white",
+    color1
   );
   button.onClick = function () {
     game.start(1);
   };
 
-  const fps = new TextField(game, 10, 10, 200, 25, "blue");
+  const fps = new TextField(game, 10, 10, 200, 25, "white", color1);
   fps.label.align = "left";
-  fps.onUpdate = function () {
-    this.label.text = "FPS: " + game.fps;
-  };
 
-  const mouseXY = new TextField(game, 10, 45, 200, 25, "blue");
+  const mouseXY = new TextField(game, 10, 45, 200, 25, "white", color1);
   mouseXY.label.align = "left";
   mouseXY.onUpdate = function () {
+    fps.label.text = "FPS: " + game.fps;
     this.label.text = "Mouse: " + Input.mouse.x + ":" + Input.mouse.y;
   };
 
@@ -43,8 +43,34 @@ onload = function () {
 
   const level1 = new Scene(game);
   level1.onUpdate = function () {
+    player.setAnimation("walk right");
+
     if (Input.getKey("Escape")) {
       game.start(0);
+    }
+
+    if (Input.getKey("w")) {
+      player.moveUp();
+      player.setAnimation("walk up");
+      player.animation.play();
+    }
+
+    if (Input.getKey("s")) {
+      player.moveDown();
+      player.setAnimation("walk down");
+      player.animation.play();
+    }
+
+    if (Input.getKey("a")) {
+      player.moveLeft();
+      player.setAnimation("walk left");
+      player.animation.play();
+    }
+
+    if (Input.getKey("d")) {
+      player.moveRight();
+      player.setAnimation("walk right");
+      player.animation.play();
     }
   };
 
@@ -64,30 +90,13 @@ onload = function () {
     80,
     100,
     "images/skeleton_walk.png",
-    9,
-    4
+    -9,
+    -4
   );
-  player.onUpdate = function () {
-    if (Input.getKey("w")) {
-      this.moveUp();
-      this.animate(1);
-    }
-
-    if (Input.getKey("s")) {
-      this.moveDown();
-      this.animate(3);
-    }
-
-    if (Input.getKey("a")) {
-      this.moveLeft();
-      this.animate(2);
-    }
-
-    if (Input.getKey("d")) {
-      this.moveRight();
-      this.animate(4);
-    }
-  };
+  player.addAnimation("walk up", 1, 9);
+  player.addAnimation("walk down", 3, 9);
+  player.addAnimation("walk left", 2, 9);
+  player.addAnimation("walk right", 4, 9);
 
   level1.addGameObject(world);
   level1.addGameObject(player);
