@@ -1,5 +1,58 @@
 class Component {
-  constructor() {}
+  game = null;
+
+  constructor(game) {
+    this.game = game;
+  }
+}
+
+class Anim extends Component {
+  sheetRowId = 1;
+  frame = 1;
+  numOfFrames = 0;
+  name = "idle";
+  isPlaying = false;
+  speed = 50;
+
+  constructor(game, name, sheetRowId, numOfFrames, speed = null) {
+    super(game);
+
+    this.name = name;
+    this.sheetRowId = sheetRowId;
+    this.numOfFrames = numOfFrames;
+
+    if (speed) {
+      this.speed = speed;
+    }
+  }
+
+  animate() {
+    if (this.isPlaying) {
+      this.frame++;
+    }
+
+    if (this.frame > this.numOfFrames) {
+      this.rewind();
+    }
+  }
+
+  pause() {
+    this.isPlaying = false;
+  }
+
+  play() {
+    this.isPlaying = true;
+  }
+
+  rewind() {
+    this.frame = 1;
+  }
+
+  stop() {
+    this.isPlaying = false;
+
+    this.rewind();
+  }
 }
 
 class Transform extends Component {
@@ -16,6 +69,51 @@ class Transform extends Component {
   rotation = 0;
 }
 
+class SpriteSheet extends Component {
+  cols = 0;
+  rows = 0;
+
+  tile = {
+    width: 0,
+    height: 0,
+  };
+
+  image = null;
+
+  constructor(game, image, tileWidth, tileHeight) {
+    super(game);
+
+    if (!this.image) {
+      const t = this;
+
+      this.image = new Img(game, 0, 0, 0, 0, image);
+      this.image.onLoad = function () {
+        if (tileWidth < 0 && tileHeight < 0) {
+          t.divByNum(tileWidth - 2 * tileWidth, tileHeight - 2 * tileHeight);
+        } else {
+          t.tile.width = tileWidth;
+          t.tile.height = tileHeight;
+    
+          t.cols = t.image.width / tileWidth;
+          t.rows = t.image.height / tileHeight;
+        }
+      }
+    }
+  };
+
+  divByNum(cols, rows) {
+    this.tile.width = this.image.width / cols;
+    this.tile.height = this.image.height / rows;
+
+    this.cols = this.image.width / this.tile.width;
+    this.rows = this.image.height / this.tile.height;
+  };
+
+  getImage() {
+    return this.image.img;
+  };
+}
+
 class GameObject {
   position = {
     x: 0,
@@ -30,8 +128,11 @@ class GameObject {
   transform = null;
   onUpdate = null;
 
+  parent = null;
+  gameObjects = [];
+
   constructor(game, x, y, width, height) {
-    this.transform = new Transform();
+    this.transform = new Transform(game);
 
     this.game = game;
 
@@ -40,6 +141,11 @@ class GameObject {
 
     this.width = width;
     this.height = height;
+  }
+
+  addGameObject(gameObject) {
+    gameObject.parent = this;
+    this.gameObjects.push(gameObject);
   }
 
   update() {
@@ -170,18 +276,41 @@ class Label extends GameObject {
 }
 
 class Img extends GameObject {
-  image = null;
+  img = null;
+  onLoad = null;
 
   constructor(game, x, y, width, height, image) {
     super(game, x, y, width, height);
 
-    this.image = new Image();
-    this.image.src = image;
+    if (!this.image) {
+      const t = this;
+
+      this.img = new Image();
+      this.img.onload = function () {
+        if (!t.width) {
+          t.width = this.width;
+        }
+
+        if (!t.height) {
+          t.height = this.height;
+        }
+
+        if (t.onLoad) {
+          t.onLoad();
+        }
+      };
+      
+      this.img.src = image;
+    }
+  }
+
+  update() {
+    super.update();
   }
 
   draw(context) {
     context.drawImage(
-      this.image,
+      this.img,
       this.position.x,
       this.position.y,
       this.width,
@@ -191,15 +320,24 @@ class Img extends GameObject {
 }
 
 class Button extends GameObject {
-  color = "red";
+  color = "white";
   background = "black";
   mouseOver = false;
   onClick = null;
   rectangle = null;
+  image = null;
   label = null;
 
-  constructor(game, x, y, width, height, text, color = null) {
+  constructor(game, x, y, width, height, text, color = null, bg = null) {
     super(game, x, y, width, height);
+
+    if (bg) {
+      this.background = bg;
+    }
+
+    if (color) {
+      this.color = color;
+    }
 
     this.rectangle = new Rectangle(
       game,
@@ -208,16 +346,15 @@ class Button extends GameObject {
       this.width,
       this.height,
       this.background,
-      0,
+      this.color,
       this
     );
 
     this.label = new Label(game, x, y, this);
     this.label.text = text;
 
-    if (color) {
-      this.color = color;
-    }
+    this.addGameObject(this.rectangle);
+    this.addGameObject(this.label);
   }
 
   update() {
@@ -225,6 +362,7 @@ class Button extends GameObject {
 
     this.mouseOver = false;
     this.rectangle.color = false;
+    this.game.getScene().canvas.style.cursor = "default";
 
     if (
       Input.mouse.x > this.position.x &&
@@ -233,6 +371,8 @@ class Button extends GameObject {
       Input.mouse.y < this.position.y + this.height
     ) {
       this.mouseOver = true;
+      this.rectangle.color = this.color;
+      this.game.getScene().canvas.style.cursor = "pointer";
     }
 
     if (Input.getButton("left") && this.mouseOver) {
@@ -244,10 +384,6 @@ class Button extends GameObject {
   }
 
   draw(context) {
-    if (this.mouseOver) {
-      this.rectangle.color = this.color;
-    }
-
     this.rectangle.draw(context);
     this.label.draw(context);
   }
@@ -278,7 +414,7 @@ class TextField extends GameObject {
       this.width,
       this.height,
       this.background,
-      0,
+      this.color,
       this
     );
 
@@ -299,43 +435,39 @@ class TextField extends GameObject {
 }
 
 class Sprite extends GameObject {
-  onUpdate = null;
-  atlas = null;
-  animation = 1;
-  frame = 1;
-  numOfFrames = 0;
-  numOfAnims = 0;
-  frameWidth = 0;
-  frameHeight = 0;
+  animation = null;
+  sheet = null;
 
-  constructor(game, x, y, width, height, atlas, numOfFrames, numOfAnims) {
+  animations = [];
+
+  constructor(game, x, y, width, height, atlas, tileWidth, tileHeight) {
     super(game, x, y, width, height);
 
-    this.atlas = new Image();
-    this.atlas.src = atlas;
-
-    this.numOfFrames = numOfFrames;
-    this.numOfAnims = numOfAnims;
-    this.frameWidth = this.atlas.width / numOfFrames;
-    this.frameHeight = this.atlas.height / numOfAnims;
+    this.sheet = new SpriteSheet(game, atlas, tileWidth, tileHeight);
   }
 
-  animate(animation) {
-    this.animation = animation;
-    this.frame++;
+  addAnimation(name, sheetRowId, numOfFrames) {
+    const anim = new Anim(this.game, name, sheetRowId, numOfFrames);
 
-    if (this.frame > this.numOfFrames) {
-      this.frame = 1;
-    }
+    this.animations[name] = anim;
+  }
+
+  setAnimation(name) {
+    this.animation = this.animations[name];
+  }
+
+  update() {
+    super.update();
+    this.animation.animate();
   }
 
   draw(context) {
     context.drawImage(
-      this.atlas,
-      this.frameWidth * (this.frame - 1),
-      this.frameHeight * (this.animation - 1),
-      this.frameWidth,
-      this.frameHeight,
+      this.sheet.getImage(),
+      this.sheet.tile.width * (this.animation.frame - 1),
+      this.sheet.tile.height * (this.animation.sheetRowId - 1),
+      this.sheet.tile.width,
+      this.sheet.tile.height,
       this.position.x,
       this.position.y,
       this.width,
@@ -345,16 +477,7 @@ class Sprite extends GameObject {
 }
 
 class TileMap extends GameObject {
-  atlas = {
-    cols: 0,
-    rows: 0,
-    image: null,
-    tile: {
-      width: 0,
-      height: 0,
-    },
-  };
-
+  atlas = null;
   numOfCols = 0;
   numOfRows = 0;
   numOfIslands = 0;
@@ -367,14 +490,7 @@ class TileMap extends GameObject {
     this.numOfRows = rows;
     this.numOfIslands = cols * rows;
 
-    this.atlas.image = new Image();
-    this.atlas.image.src = atlas;
-
-    this.atlas.tile.width = tileWidth;
-    this.atlas.tile.height = tileHeight;
-
-    this.atlas.cols = this.atlas.image.width / tileWidth;
-    this.atlas.rows = this.atlas.image.height / tileHeight;
+    this.atlas = new SpriteSheet(game, atlas, tileWidth, tileHeight);
 
     for (let i = 0; i < this.numOfRows; ++i) {
       const row = [];
@@ -402,7 +518,7 @@ class TileMap extends GameObject {
         const screenPosY = this.position.y + i * this.atlas.tile.height;
 
         context.drawImage(
-          this.atlas.image,
+          this.atlas.getImage(),
           atlasPosX,
           atlasPosY,
           this.atlas.tile.width,
@@ -418,35 +534,39 @@ class TileMap extends GameObject {
 }
 
 class Character extends Sprite {
+  speed = 60;
+
   velocity = {
     x: 0,
     y: 0,
   };
 
   update() {
+    const lastFrameSeconds = this.game.getScene().lastFrameDurSec;
+
     super.update();
 
-    this.position.x += this.velocity.x;
-    this.position.y += this.velocity.y;
+    this.position.x += this.velocity.x * lastFrameSeconds;
+    this.position.y += this.velocity.y * lastFrameSeconds;
 
     this.velocity.x = 0;
     this.velocity.y = 0;
   }
 
   moveLeft() {
-    this.velocity.x -= 1;
+    this.velocity.x -= this.speed;
   }
 
   moveRight() {
-    this.velocity.x += 1;
+    this.velocity.x += this.speed;
   }
 
   moveUp() {
-    this.velocity.y -= 1;
+    this.velocity.y -= this.speed;
   }
 
   moveDown() {
-    this.velocity.y += 1;
+    this.velocity.y += this.speed;
   }
 }
 
@@ -533,9 +653,9 @@ class Scene extends GameObject {
   game = null;
   canvas = null;
   context = null;
-  gameObjects = [];
   animationFrameReqID = 0;
   oldTimeStamp = 0;
+  lastFrameDurSec = 0;
 
   constructor(game) {
     super(game, 0, 0, 0, 0);
@@ -580,11 +700,12 @@ class Scene extends GameObject {
     if (this.context) {
       const t = this;
       const frameDuration = timeStamp - this.oldTimeStamp;
-      const frameDurSeconds = frameDuration / 1000;
-      const fps = 1 / frameDurSeconds;
+
+      this.lastFrameDurSec = frameDuration / 1000;
+
+      const fps = 1 / this.lastFrameDurSec;
 
       this.oldTimeStamp = timeStamp;
-
       this.game.fps = Math.round(fps);
 
       this.update();
@@ -618,10 +739,6 @@ class Scene extends GameObject {
         this.gameObjects[i].draw(this.context);
       }
     }
-  }
-
-  addGameObject(gameObject) {
-    this.gameObjects.push(gameObject);
   }
 }
 
