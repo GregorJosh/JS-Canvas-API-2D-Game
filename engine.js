@@ -12,7 +12,10 @@ class Anim extends Component {
   numOfFrames = 0;
   name = "idle";
   isPlaying = false;
-  speed = 50;
+  duration = 1000;
+  frameDuration = 0;
+  numOfIterations = 0;
+  iteration = 0;
 
   constructor(game, name, sheetRowId, numOfFrames, speed = null) {
     super(game);
@@ -28,11 +31,20 @@ class Anim extends Component {
 
   animate() {
     if (this.isPlaying) {
+      this.frameDuration = this.duration / this.game.fps;
       this.frame++;
-    }
 
-    if (this.frame > this.numOfFrames) {
-      this.rewind();
+      console.log("Frame duation: " + this.frameDuration);
+
+      if (this.frame > this.numOfFrames) {
+        this.rewind();
+        this.iteration++;
+      }
+
+      if (this.iteration > (this.numOfIterations - 1)) {
+        this.stop();
+        this.iteration = 0;
+      }
     }
   }
 
@@ -40,8 +52,11 @@ class Anim extends Component {
     this.isPlaying = false;
   }
 
-  play() {
-    this.isPlaying = true;
+  play(iterations) {
+    if (this.numOfFrames > 1) {
+      this.isPlaying = true;
+      this.numOfIterations = iterations;
+    }
   }
 
   rewind() {
@@ -49,8 +64,7 @@ class Anim extends Component {
   }
 
   stop() {
-    this.isPlaying = false;
-
+    this.pause();
     this.rewind();
   }
 }
@@ -436,6 +450,7 @@ class TextField extends GameObject {
 
 class Sprite extends GameObject {
   animation = null;
+  prevAnimation = null;
   sheet = null;
 
   animations = [];
@@ -444,16 +459,23 @@ class Sprite extends GameObject {
     super(game, x, y, width, height);
 
     this.sheet = new SpriteSheet(game, atlas, tileWidth, tileHeight);
+    
+    this.addAnimation("idle", 1, 1);
+    this.animate("idle");
   }
 
   addAnimation(name, sheetRowId, numOfFrames) {
     const anim = new Anim(this.game, name, sheetRowId, numOfFrames);
 
     this.animations[name] = anim;
+    this.animation = anim;
   }
 
-  setAnimation(name) {
+  animate(name) {
+    this.prevAnimation = this.animation;
     this.animation = this.animations[name];
+
+    this.animation.play(1);
   }
 
   update() {
