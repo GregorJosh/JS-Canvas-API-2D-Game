@@ -31,7 +31,7 @@ class Anim extends Component {
 
   animate() {
     if (this.isPlaying) {
-      this.frameDuration = this.duration / this.game.fps;
+      this.frameDuration = this.duration / this.numOfFrames;
       this.frame++;
 
       console.log("Frame duation: " + this.frameDuration);
@@ -46,6 +46,10 @@ class Anim extends Component {
         this.iteration = 0;
       }
     }
+  } 
+  
+  resume() {
+    this.isPlaying = true;
   }
 
   pause() {
@@ -595,6 +599,7 @@ class Character extends Sprite {
 class Input {
   static keys = false;
   static buttons = false;
+  static touchScreen = false;
 
   static mouse = {
     x: 0,
@@ -604,34 +609,51 @@ class Input {
   static {
     const t = this;
 
-    window.addEventListener("keydown", function (event) {
+    onkeydown = function (event) {
       if (!t.keys) {
         t.keys = [];
       }
 
       t.keys[event.key] = true;
-    });
+    };
 
-    window.addEventListener("keyup", function (event) {
+    onkeyup = function (event) {
       t.keys[event.key] = false;
-    });
+    };
 
-    window.addEventListener("mousedown", function (event) {
+    onmousedown = function (event) {
       if (!t.buttons) {
         t.buttons = [];
       }
 
       t.buttons[t.getButtonName(event.button)] = true;
-    });
+    };
 
-    window.addEventListener("mouseup", function (event) {
+    onmouseup = function (event) {
       t.buttons[t.getButtonName(event.button)] = false;
-    });
+    };
 
-    window.addEventListener("mousemove", function (event) {
-      t.mouse.x = event.x;
-      t.mouse.y = event.y;
-    });
+    onmousemove = function (event) {
+      t.setMouseCoord(event.x, event.y);
+    };
+    
+    ontouchstart = function (event) {
+      const x = Math.floor(event.touches[0].clientX);
+      const y = Math.floor(event.touches[0].clientY);
+      
+      if (!t.buttons) {
+        t.buttons = [];
+      }
+      
+      t.buttons["left"] = true;
+      t.touchScreen = true;
+      
+      t.setMouseCoord(x, y);
+    };
+    
+    ontouchend = function (event) {
+      t.buttons["left"] = false;
+    }
   }
 
   static getKey(key) {
@@ -669,6 +691,11 @@ class Input {
 
     return name;
   }
+  
+  static setMouseCoord(x, y) {
+    this.mouse.x = x;
+    this.mouse.y = y;
+  }
 }
 
 class Scene extends GameObject {
@@ -685,10 +712,10 @@ class Scene extends GameObject {
     this.init();
   }
 
-  init() {
+  init(game) {
     this.canvas = document.createElement("canvas");
     this.width = this.canvas.width = innerWidth;
-    this.height = this.canvas.height = innerHeight;
+    
     this.context = this.canvas.getContext("2d");
 
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
@@ -701,6 +728,12 @@ class Scene extends GameObject {
 
     if (!this.canvas) {
       this.init();
+    }
+    
+    if (Input.touchScreen) {
+      this.height = this.canvas.height = innerHeight / 2;
+    } else {
+      this.height = this.canvas.height = innerHeight;
     }
 
     this.animationFrameReqID = requestAnimationFrame(function (timeStamp) {
@@ -768,6 +801,7 @@ class Game {
   fps = 0;
   scenes = [];
   scene = 0;
+  mobile = false;
 
   constructor() {
     document.body.style.backgroundColor = "black";
