@@ -6,6 +6,74 @@ class Component {
   }
 }
 
+class ControlPanel extends Component {
+  div1 = null;
+  div2 = null
+  
+  btnUp = null;
+  btnLeft = null;
+  btnDown = null;
+  btnRight = null;
+  
+  constructor(game) {
+    super(game);
+    
+    this.setup();
+  }
+  
+  setup() {
+    const div1 = document.createElement("div");
+    const div2 = document.createElement("div");
+    
+    const btnUp = document.createElement("button");
+    const btnLeft = document.createElement("button");
+    const btnDown = document.createElement("button");
+    const btnRight = document.createElement("button");
+    
+    const fontSize = "50px";
+    const fontWeight = "bold";
+    const margin = "20px";
+    
+    btnUp.innerHTML = "&uarr;";
+    btnLeft.innerHTML = "&larr;";
+    btnDown.innerHTML = "&darr;";
+    btnRight.innerHTML = "&rarr;";
+    
+    this.setBtnStyle(btnUp, fontSize, fontWeight, margin, "0px 20px");
+    this.setBtnStyle(btnDown, fontSize, fontWeight, margin, "0px 20px");
+    this.setBtnStyle(btnLeft, fontSize, fontWeight, margin);
+    this.setBtnStyle(btnRight, fontSize, fontWeight, margin);
+    
+    div1.appendChild(btnUp);
+    div2.appendChild(btnLeft);
+    div2.appendChild(btnDown);
+    div2.appendChild(btnRight);
+    
+    div1.style.textAlign = "center";
+    div2.style.textAlign = "center";
+    
+    document.body.appendChild(div1);
+    document.body.appendChild(div2);
+    
+    this.div1 = div1;
+    this.div2 = div2;
+    this.btnLeft = btnLeft;
+    this.btnRight = btnRight;
+    
+    console.log(div1);
+  }
+  
+  setBtnStyle(btn, fontSize, fontWeight, margin, padding = null) {
+    btn.style.fontSize = fontSize;
+    btn.style.fontWeight = fontWeight;
+    btn.style.margin = margin;
+    
+    if (padding) {
+      btn.style.padding = padding;
+    }
+  }
+}
+
 class Anim extends Component {
   sheetRowId = 1;
   frame = 1;
@@ -607,7 +675,27 @@ class Input {
   };
 
   static {
-    const t = this;
+    const t = this; 
+    
+    if ("ontouchstart" in window) {
+      this.touchScreen = true;
+      
+      ontouchstart = function(event) {
+        const x = Math.floor(event.touches[0].clientX);
+        const y = Math.floor(event.touches[0].clientY);
+      
+        if (!t.buttons) {
+          t.buttons = [];
+        }
+      
+        t.buttons["left"] = true;
+        t.setMouseCoord(x, y);
+      };
+      
+      ontouchend = function(event) {
+        t.buttons["left"] = false;
+      }
+    }
 
     onkeydown = function (event) {
       if (!t.keys) {
@@ -636,24 +724,6 @@ class Input {
     onmousemove = function (event) {
       t.setMouseCoord(event.x, event.y);
     };
-    
-    ontouchstart = function (event) {
-      const x = Math.floor(event.touches[0].clientX);
-      const y = Math.floor(event.touches[0].clientY);
-      
-      if (!t.buttons) {
-        t.buttons = [];
-      }
-      
-      t.buttons["left"] = true;
-      t.touchScreen = true;
-      
-      t.setMouseCoord(x, y);
-    };
-    
-    ontouchend = function (event) {
-      t.buttons["left"] = false;
-    }
   }
 
   static getKey(key) {
@@ -708,13 +778,17 @@ class Scene extends GameObject {
 
   constructor(game) {
     super(game, 0, 0, 0, 0);
-
-    this.init();
   }
 
-  init(game) {
+  init() {
     this.canvas = document.createElement("canvas");
     this.width = this.canvas.width = innerWidth;
+    
+    if (Input.touchScreen) {
+      this.height = this.canvas.height = innerHeight / 2;
+    } else {
+      this.height = this.canvas.height = innerHeight;
+    }
     
     this.context = this.canvas.getContext("2d");
 
@@ -728,14 +802,8 @@ class Scene extends GameObject {
 
     if (!this.canvas) {
       this.init();
-    }
+    } 
     
-    if (Input.touchScreen) {
-      this.height = this.canvas.height = innerHeight / 2;
-    } else {
-      this.height = this.canvas.height = innerHeight;
-    }
-
     this.animationFrameReqID = requestAnimationFrame(function (timeStamp) {
       t.animationFrame(timeStamp);
     });
@@ -801,15 +869,23 @@ class Game {
   fps = 0;
   scenes = [];
   scene = 0;
-  mobile = false;
+  controlPanel = null;
 
   constructor() {
     document.body.style.backgroundColor = "black";
-    document.body.style.padding = "none";
+    document.body.style.padding = "none"; 
+    
+    if (Input.touchScreen) {
+      this.controlPanel = new ControlPanel(this);
+      
+    }
   }
 
   start(newScene) {
-    this.scenes[this.scene].stop();
+    if (this.scenes[this.scene]) {
+      this.scenes[this.scene].stop();
+    }
+    
     this.scene = newScene;
     this.scenes[this.scene].start();
   }
