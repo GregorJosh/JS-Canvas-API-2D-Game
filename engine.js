@@ -368,7 +368,7 @@ class Img extends GameObject {
   constructor(game, x, y, width, height, image) {
     super(game, x, y, width, height);
 
-    if (!this.image) {
+    if (!this.img) {
       const t = this;
 
       this.img = new Image();
@@ -778,6 +778,8 @@ class Scene extends GameObject {
 
   constructor(game) {
     super(game, 0, 0, 0, 0);
+
+    this.init();
   }
 
   init() {
