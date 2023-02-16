@@ -8,66 +8,66 @@ class Component {
 
 class ControlPanel extends Component {
   div1 = null;
-  div2 = null
-  
+  div2 = null;
+
   btnUp = null;
   btnLeft = null;
   btnDown = null;
   btnRight = null;
-  
+
   constructor(game) {
     super(game);
-    
+
     this.setup();
   }
-  
+
   setup() {
     const div1 = document.createElement("div");
     const div2 = document.createElement("div");
-    
+
     const btnUp = document.createElement("button");
     const btnLeft = document.createElement("button");
     const btnDown = document.createElement("button");
     const btnRight = document.createElement("button");
-    
+
     const fontSize = "50px";
     const fontWeight = "bold";
     const margin = "20px";
-    
+
     btnUp.innerHTML = "&uarr;";
     btnLeft.innerHTML = "&larr;";
     btnDown.innerHTML = "&darr;";
     btnRight.innerHTML = "&rarr;";
-    
+
     this.setBtnStyle(btnUp, fontSize, fontWeight, margin, "0px 20px");
     this.setBtnStyle(btnDown, fontSize, fontWeight, margin, "0px 20px");
     this.setBtnStyle(btnLeft, fontSize, fontWeight, margin);
     this.setBtnStyle(btnRight, fontSize, fontWeight, margin);
-    
+
     div1.appendChild(btnUp);
     div2.appendChild(btnLeft);
     div2.appendChild(btnDown);
     div2.appendChild(btnRight);
-    
+
     div1.style.textAlign = "center";
     div2.style.textAlign = "center";
-    
+
     document.body.appendChild(div1);
     document.body.appendChild(div2);
-    
+
     this.div1 = div1;
     this.div2 = div2;
     this.btnLeft = btnLeft;
     this.btnRight = btnRight;
-    
+
     console.log(div1);
   }
-  
+
   setBtnStyle(btn, fontSize, fontWeight, margin, padding = null) {
     btn.style.fontSize = fontSize;
     btn.style.fontWeight = fontWeight;
     btn.style.margin = margin;
-    
+
     if (padding) {
       btn.style.padding = padding;
     }
@@ -109,13 +109,13 @@ class Anim extends Component {
         this.iteration++;
       }
 
-      if (this.iteration > (this.numOfIterations - 1)) {
+      if (this.iteration > this.numOfIterations - 1) {
         this.stop();
         this.iteration = 0;
       }
     }
-  } 
-  
+  }
+
   resume() {
     this.isPlaying = true;
   }
@@ -179,13 +179,13 @@ class SpriteSheet extends Component {
         } else {
           t.tile.width = tileWidth;
           t.tile.height = tileHeight;
-    
+
           t.cols = t.image.width / tileWidth;
           t.rows = t.image.height / tileHeight;
         }
-      }
+      };
     }
-  };
+  }
 
   divByNum(cols, rows) {
     this.tile.width = this.image.width / cols;
@@ -193,11 +193,11 @@ class SpriteSheet extends Component {
 
     this.cols = this.image.width / this.tile.width;
     this.rows = this.image.height / this.tile.height;
-  };
+  }
 
   getImage() {
     return this.image.img;
-  };
+  }
 }
 
 class GameObject {
@@ -385,7 +385,7 @@ class Img extends GameObject {
           t.onLoad();
         }
       };
-      
+
       this.img.src = image;
     }
   }
@@ -531,7 +531,7 @@ class Sprite extends GameObject {
     super(game, x, y, width, height);
 
     this.sheet = new SpriteSheet(game, atlas, tileWidth, tileHeight);
-    
+
     this.addAnimation("idle", 1, 1);
     this.animate("idle");
   }
@@ -675,26 +675,26 @@ class Input {
   };
 
   static {
-    const t = this; 
-    
+    const t = this;
+
     if ("ontouchstart" in window) {
       this.touchScreen = true;
-      
-      ontouchstart = function(event) {
+
+      ontouchstart = function (event) {
         const x = Math.floor(event.touches[0].clientX);
         const y = Math.floor(event.touches[0].clientY);
-      
+
         if (!t.buttons) {
           t.buttons = [];
         }
-      
+
         t.buttons["left"] = true;
         t.setMouseCoord(x, y);
       };
-      
-      ontouchend = function(event) {
+
+      ontouchend = function (event) {
         t.buttons["left"] = false;
-      }
+      };
     }
 
     onkeydown = function (event) {
@@ -761,7 +761,7 @@ class Input {
 
     return name;
   }
-  
+
   static setMouseCoord(x, y) {
     this.mouse.x = x;
     this.mouse.y = y;
@@ -769,12 +769,13 @@ class Input {
 }
 
 class Scene extends GameObject {
+  name = "Scene Name";
   game = null;
   canvas = null;
   context = null;
-  name = "";
-  animationFrameReqID = 0;
-  oldTimeStamp = 0;
+  animFrameReqID = 0;
+  prevTimeStamp = 0;
+  lastFrameDurMs = 0;
   lastFrameDurSec = 0;
 
   constructor(game, name) {
@@ -790,34 +791,34 @@ class Scene extends GameObject {
 
     super(game, 0, 0, width, height);
 
-    this.name = name;
+    if (name) {
+      this.name = name;
+    }
   }
 
   init() {
     this.canvas = document.createElement("canvas");
     this.canvas.width = this.width;
     this.canvas.height = this.height;
-    
+
     this.context = this.canvas.getContext("2d");
   }
 
   start() {
-    const t = this;
-
     if (!this.canvas) {
       this.init();
-    } 
+    }
 
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-    
-    this.animationFrameReqID = requestAnimationFrame(function (timeStamp) {
-      t.animationFrame(timeStamp);
-    });
+
+    this.animFrameReqID = requestAnimationFrame((timeStamp) =>
+      this.nextFrame(timeStamp)
+    );
   }
 
   stop() {
     if (this.canvas) {
-      cancelAnimationFrame(this.animationFrameReqID);
+      cancelAnimationFrame(this.animFrameReqID);
 
       this.context = null;
       this.canvas.remove();
@@ -825,39 +826,37 @@ class Scene extends GameObject {
     }
   }
 
-  animationFrame(timeStamp) {
+  nextFrame(timeStamp) {
     if (this.context) {
-      const t = this;
-      const frameDuration = timeStamp - this.oldTimeStamp;
-
-      this.lastFrameDurSec = frameDuration / 1000;
+      this.lastFrameDurMs = timeStamp - this.prevTimeStamp;
+      this.lastFrameDurSec = this.lastFrameDurMs / 1000;
 
       const fps = 1 / this.lastFrameDurSec;
 
-      this.oldTimeStamp = timeStamp;
+      this.prevTimeStamp = timeStamp;
       this.game.fps = Math.round(fps);
 
       this.update();
       this.draw();
 
-      this.animationFrameReqID = requestAnimationFrame(function (timeStamp) {
-        t.animationFrame(timeStamp);
-      });
+      this.animFrameReqID = requestAnimationFrame((timeStamp) =>
+        this.nextFrame(timeStamp)
+      );
     }
   }
 
   update() {
     super.update();
 
-    if (this.context) {
-      for (let i = 0; i < this.gameObjects.length; ++i) {
-        this.gameObjects[i].update();
-      }
+    for (let i = 0; i < this.gameObjects.length; ++i) {
+      this.gameObjects[i].update();
     }
   }
 
   clear() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    if (this.context) {
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }
   }
 
   draw() {
@@ -880,13 +879,12 @@ class Game {
 
   constructor() {
     document.body.style.backgroundColor = "black";
-    document.body.style.padding = "none"; 
+    document.body.style.padding = "none";
     document.body.style.overflow = "hidden";
     document.body.style.margin = "0px";
-    
+
     if (Input.touchScreen) {
       this.controlPanel = new ControlPanel(this);
-      
     }
   }
 
@@ -895,7 +893,7 @@ class Game {
       this.scenes[this.scene].stop();
       this.state = "stopped";
     }
-    
+
     this.scene = newScene;
     this.scenes[this.scene].start();
     this.state = "playing";
