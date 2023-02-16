@@ -2,7 +2,7 @@ onload = function () {
   const color1 = "#7B6662";
   const game = new Game();
 
-  const mainMenu = new Scene(game);
+  const mainMenu = new Scene(game, "Main Menu");
   const mainMenuBg = new Img(
     game,
     0,
@@ -20,7 +20,7 @@ onload = function () {
     50,
     "Start Game",
     "white",
-    color1
+    color1 
   );
   button.onClick = function () {
     game.start(1);
@@ -42,7 +42,7 @@ onload = function () {
   mainMenu.addGameObject(fps);
   mainMenu.addGameObject(mouseXY);
 
-  const level1 = new Scene(game);
+  const level1 = new Scene(game, "Level 1");
   const world = new TileMap(
     game,
     60,

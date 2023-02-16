@@ -772,31 +772,33 @@ class Scene extends GameObject {
   game = null;
   canvas = null;
   context = null;
+  name = "";
   animationFrameReqID = 0;
   oldTimeStamp = 0;
   lastFrameDurSec = 0;
 
-  constructor(game) {
-    super(game, 0, 0, 0, 0);
+  constructor(game, name) {
+    const width = window.innerWidth;
 
-    this.init();
+    let height = 0;
+
+    if (Input.touchScreen) {
+      height = window.innerHeight / 2;
+    } else {
+      height = window.innerHeight;
+    }
+
+    super(game, 0, 0, width, height);
+
+    this.name = name;
   }
 
   init() {
     this.canvas = document.createElement("canvas");
-    this.width = this.canvas.width = innerWidth;
-    
-    if (Input.touchScreen) {
-      this.height = this.canvas.height = innerHeight / 2;
-    } else {
-      this.height = this.canvas.height = innerHeight;
-    }
+    this.canvas.width = this.width;
+    this.canvas.height = this.height;
     
     this.context = this.canvas.getContext("2d");
-
-    document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-    document.body.style.overflow = "hidden";
-    document.body.style.margin = "0px";
   }
 
   start() {
@@ -805,6 +807,8 @@ class Scene extends GameObject {
     if (!this.canvas) {
       this.init();
     } 
+
+    document.body.insertBefore(this.canvas, document.body.childNodes[0]);
     
     this.animationFrameReqID = requestAnimationFrame(function (timeStamp) {
       t.animationFrame(timeStamp);
@@ -871,11 +875,14 @@ class Game {
   fps = 0;
   scenes = [];
   scene = 0;
+  state = "stopped";
   controlPanel = null;
 
   constructor() {
     document.body.style.backgroundColor = "black";
     document.body.style.padding = "none"; 
+    document.body.style.overflow = "hidden";
+    document.body.style.margin = "0px";
     
     if (Input.touchScreen) {
       this.controlPanel = new ControlPanel(this);
@@ -886,10 +893,12 @@ class Game {
   start(newScene) {
     if (this.scenes[this.scene]) {
       this.scenes[this.scene].stop();
+      this.state = "stopped";
     }
     
     this.scene = newScene;
     this.scenes[this.scene].start();
+    this.state = "playing";
   }
 
   getScene() {
