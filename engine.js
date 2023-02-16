@@ -773,7 +773,7 @@ class Scene extends GameObject {
   game = null;
   canvas = null;
   context = null;
-  animFrameReqID = 0;
+  animFrame = 0;
   prevTimeStamp = 0;
   lastFrameDurMs = 0;
   lastFrameDurSec = 0;
@@ -811,14 +811,14 @@ class Scene extends GameObject {
 
     document.body.insertBefore(this.canvas, document.body.childNodes[0]);
 
-    this.animFrameReqID = requestAnimationFrame((timeStamp) =>
+    this.animFrame = requestAnimationFrame((timeStamp) =>
       this.nextFrame(timeStamp)
     );
   }
 
   stop() {
     if (this.canvas) {
-      cancelAnimationFrame(this.animFrameReqID);
+      cancelAnimationFrame(this.animFrame);
 
       this.context = null;
       this.canvas.remove();
@@ -839,7 +839,7 @@ class Scene extends GameObject {
       this.update();
       this.draw();
 
-      this.animFrameReqID = requestAnimationFrame((timeStamp) =>
+      this.animFrame = requestAnimationFrame((timeStamp) =>
         this.nextFrame(timeStamp)
       );
     }
@@ -873,10 +873,10 @@ class Scene extends GameObject {
 class Game {
   fps = 0;
   scenes = [];
-  scene = 0;
   state = "stopped";
   controlPanel = null;
-
+  currentScene = null;
+  
   constructor() {
     document.body.style.backgroundColor = "black";
     document.body.style.padding = "none";
@@ -888,24 +888,24 @@ class Game {
     }
   }
 
-  start(newScene) {
-    if (this.scenes[this.scene]) {
-      this.scenes[this.scene].stop();
+  start(sceneName) {
+    if (this.currentScene) {
+      this.currentScene.stop();
       this.state = "stopped";
     }
 
-    this.scene = newScene;
-    this.scenes[this.scene].start();
+    this.currentScene = this.scenes[sceneName];
+    this.currentScene.start();
     this.state = "playing";
   }
 
   getScene() {
-    return this.scenes[this.scene];
+    return this.currentScene;
   }
 
   addScene(newScene) {
     newScene.game = this;
 
-    this.scenes.push(newScene);
+    this.scenes[newScene.name] = newScene;
   }
 }

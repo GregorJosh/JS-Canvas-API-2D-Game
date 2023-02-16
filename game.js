@@ -2,13 +2,14 @@ onload = function () {
   const color1 = "#7B6662";
   const game = new Game();
 
-  const mainMenu = new Scene(game, "Main Menu");
-  const mainMenuBg = new Img(
+  const menu = new Scene(game, "Main Menu");
+  
+  const bg = new Img(
     game,
     0,
     0,
-    mainMenu.width,
-    mainMenu.height,
+    menu.width,
+    menu.height,
     "images/bg.png"
   );
 
@@ -23,26 +24,28 @@ onload = function () {
     color1 
   );
   button.onClick = function () {
-    game.start(1);
+    game.start("Level 1");
   };
 
   const fps = new TextField(game, 10, 10, 200, 25, "white", color1);
   fps.label.align = "left";
+  fps.onUpdate = function () {
+    this.label.text = "FPS: " + game.fps;
+  };
 
   const mouseXY = new TextField(game, 10, 45, 200, 25, "white", color1);
   mouseXY.label.align = "left";
+  mouseXY.onUpdate = function () {
+    this.label.text = "Mouse: " + Input.mouse.x + ":" + Input.mouse.y;
+  };
 
-  mainMenu.onUpdate = function () {
-    fps.label.text = "FPS: " + game.fps;
-    mouseXY.label.text = "Mouse: " + Input.mouse.x + ":" + Input.mouse.y;
-  }
-
-  mainMenu.addGameObject(mainMenuBg);
-  mainMenu.addGameObject(button);
-  mainMenu.addGameObject(fps);
-  mainMenu.addGameObject(mouseXY);
+  menu.addGameObject(bg);
+  menu.addGameObject(button);
+  menu.addGameObject(fps);
+  menu.addGameObject(mouseXY);
 
   const level1 = new Scene(game, "Level 1");
+  
   const world = new TileMap(
     game,
     60,
@@ -99,7 +102,7 @@ onload = function () {
   level1.addGameObject(fps);
   level1.addGameObject(mouseXY);
 
-  game.addScene(mainMenu);
+  game.addScene(menu);
   game.addScene(level1);
-  game.start(0);
+  game.start("Main Menu");
 };
