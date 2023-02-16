@@ -14,6 +14,11 @@ class ControlPanel extends Component {
   btnLeft = null;
   btnDown = null;
   btnRight = null;
+  
+  onUp = null;
+  onDown = null;
+  onLeft = null;
+  onRight = null;
 
   constructor(game) {
     super(game);
@@ -675,54 +680,52 @@ class Input {
   };
 
   static {
-    const t = this;
-
     if ("ontouchstart" in window) {
       this.touchScreen = true;
 
-      ontouchstart = function (event) {
+      window.ontouchstart = (event) => {
         const x = Math.floor(event.touches[0].clientX);
         const y = Math.floor(event.touches[0].clientY);
 
-        if (!t.buttons) {
-          t.buttons = [];
+        if (!this.buttons) {
+          this.buttons = [];
         }
 
-        t.buttons["left"] = true;
-        t.setMouseCoord(x, y);
+        this.buttons["left"] = true;
+        this.setMouseCoord(x, y);
       };
 
-      ontouchend = function (event) {
-        t.buttons["left"] = false;
+      window.ontouchend = (event) => {
+        this.buttons["left"] = false;
       };
     }
 
-    onkeydown = function (event) {
-      if (!t.keys) {
-        t.keys = [];
+    window.onkeydown = (event) => {
+      if (!this.keys) {
+        this.keys = [];
       }
 
-      t.keys[event.key] = true;
+      this.keys[event.key] = true;
     };
 
-    onkeyup = function (event) {
-      t.keys[event.key] = false;
+    window.onkeyup = (event) => {
+      this.keys[event.key] = false;
     };
 
-    onmousedown = function (event) {
-      if (!t.buttons) {
-        t.buttons = [];
+    window.onmousedown = (event) => {
+      if (!this.buttons) {
+        this.buttons = [];
       }
 
-      t.buttons[t.getButtonName(event.button)] = true;
+      this.buttons[this.getButtonName(event.button)] = true;
     };
 
-    onmouseup = function (event) {
-      t.buttons[t.getButtonName(event.button)] = false;
+    window.onmouseup = (event) => {
+      this.buttons[this.getButtonName(event.button)] = false;
     };
 
-    onmousemove = function (event) {
-      t.setMouseCoord(event.x, event.y);
+    window.onmousemove = (event) => {
+      this.setMouseCoord(event.x, event.y);
     };
   }
 
