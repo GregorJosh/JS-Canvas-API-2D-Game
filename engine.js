@@ -64,8 +64,6 @@ class ControlPanel extends Component {
     this.div2 = div2;
     this.btnLeft = btnLeft;
     this.btnRight = btnRight;
-
-    console.log(div1);
   }
 
   setBtnStyle(btn, fontSize, fontWeight, margin, padding = null) {
@@ -106,8 +104,6 @@ class Anim extends Component {
     if (this.isPlaying) {
       this.frameDuration = this.duration / this.numOfFrames;
       this.frame++;
-
-      console.log("Frame duation: " + this.frameDuration);
 
       if (this.frame > this.numOfFrames) {
         this.rewind();
@@ -678,6 +674,13 @@ class Input {
     x: 0,
     y: 0,
   };
+  
+  static controlPanel = {
+    left: false, 
+    right: false, 
+    top: false, 
+    bottom: false, 
+  }
 
   static {
     if ("ontouchstart" in window) {
