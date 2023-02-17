@@ -699,14 +699,16 @@ class Input {
 class Scene extends GameObject {
   name = "Scene Name";
   game = null;
+  type = "canvas";
   canvas = null;
   context = null;
+  div = null;
   animFrame = 0;
   prevTimeStamp = 0;
   lastFrameDurMs = 0;
   lastFrameDurSec = 0;
 
-  constructor(game, name) {
+  constructor(game, name = "", type = "") {
     const width = window.innerWidth;
 
     let height = 0;
@@ -722,14 +724,25 @@ class Scene extends GameObject {
     if (name) {
       this.name = name;
     }
+    
+    if (type) {
+      this.type = type;
+    }
   }
 
   init() {
-    this.canvas = document.createElement("canvas");
-    this.canvas.width = this.width;
-    this.canvas.height = this.height;
+    if (this.type == "canvas") {
+      this.canvas = document.createElement("canvas");
+      this.canvas.width = this.width;
+      this.canvas.height = this.height;
 
-    this.context = this.canvas.getContext("2d");
+      this.context = this.canvas.getContext("2d");
+    } else if (this.type == "html") {
+      const regex = / /i;
+      const id = this.name.replace(regex, "-").toLowerCase();
+      
+      console.log(id);
+    }
   }
 
   start() {
