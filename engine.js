@@ -830,18 +830,15 @@ class Scene extends GameObject {
 class Game {
   fps = 0;
   scenes = [];
-  state = "stopped";
   currentScene = null;
 
   start(sceneName) {
     if (this.currentScene) {
       this.currentScene.stop();
-      this.state = "stopped";
     }
 
     this.currentScene = this.scenes[sceneName];
     this.currentScene.start();
-    this.state = "playing";
   }
 
   getScene() {
