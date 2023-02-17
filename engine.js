@@ -604,19 +604,9 @@ class Input {
     y: 0,
   };
 
-  static controlPanel = {
-    div1: null,
-    div2: null,
-    btnUp: null,
-    btnLeft: null,
-    btnDown: null,
-    btnRight: null
-  };
-
   static {
     if ("ontouchstart" in window) {
       this.touchScreen = true;
-      this.#createControlPanel();
 
       window.ontouchstart = (event) => {
         const x = Math.floor(event.touches[0].clientX);
@@ -703,59 +693,6 @@ class Input {
   static setMouseCoord(x, y) {
     this.mouse.x = x;
     this.mouse.y = y;
-  }
-
-  static #createControlPanel() {
-    const div1 = document.createElement("div");
-    const div2 = document.createElement("div");
-
-    const btnUp = document.createElement("button");
-    const btnLeft = document.createElement("button");
-    const btnDown = document.createElement("button");
-    const btnRight = document.createElement("button");
-
-    const fontSize = "50px";
-    const fontWeight = "bold";
-    const margin = "20px";
-
-    btnUp.innerHTML = "&uarr;";
-    btnLeft.innerHTML = "&larr;";
-    btnDown.innerHTML = "&darr;";
-    btnRight.innerHTML = "&rarr;";
-
-    this.#setBtnStyle(btnUp, fontSize, fontWeight, margin, "0px 20px");
-    this.#setBtnStyle(btnDown, fontSize, fontWeight, margin, "0px 20px");
-    this.#setBtnStyle(btnLeft, fontSize, fontWeight, margin);
-    this.#setBtnStyle(btnRight, fontSize, fontWeight, margin);
-
-    div1.appendChild(btnUp);
-    div2.appendChild(btnLeft);
-    div2.appendChild(btnDown);
-    div2.appendChild(btnRight);
-
-    div1.style.textAlign = "center";
-    div2.style.textAlign = "center";
-
-    document.body.appendChild(div1);
-    document.body.appendChild(div2);
-
-    this.controlPanel.div1 = div1;
-    this.controlPanel.div2 = div2;
-
-    this.controlPanel.btnUp = btnUp;
-    this.controlPanel.btnRight = btnRight;
-    this.controlPanel.btnDown = btnDown;
-    this.controlPanel.btnLeft = btnLeft;
-  }
-
-  static #setBtnStyle(btn, fontSize, fontWeight, margin, padding = null) {
-    btn.style.fontSize = fontSize;
-    btn.style.fontWeight = fontWeight;
-    btn.style.margin = margin;
-
-    if (padding) {
-      btn.style.padding = padding;
-    }
   }
 }
 
@@ -866,13 +803,6 @@ class Game {
   scenes = [];
   state = "stopped";
   currentScene = null;
-  
-  constructor() {
-    document.body.style.backgroundColor = "black";
-    document.body.style.padding = "none";
-    document.body.style.overflow = "hidden";
-    document.body.style.margin = "0px";
-  }
 
   start(sceneName) {
     if (this.currentScene) {
