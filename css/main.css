@@ -1,10 +1,63 @@
+:root {
+    --color1: #7B6662;
+    --color2: white;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: sans-serif;
+}
+
 body {
     background-color: black;
-    padding: 0;
-    margin: 0;
+    color: var(--color2);
     overflow: hidden;
 }
 
 .removed {
     display: none;
+}
+
+.scene {
+    width: 100vw;
+    height: 100vh;
+
+    font-size: 24px;
+    font-weight: 700;
+}
+
+#main-menu {
+    background-image: url(../images/bg.png);
+    background-size: cover;
+
+    padding: 40px;
+    text-align: center;
+}
+
+#main-menu p {
+    max-width: 200px;
+    margin-bottom: 20px;
+    text-align: left;
+    background-color: var(--color1);
+    border: 1px solid var(--color2);
+}
+
+#main-menu p:last-of-type {
+    margin-bottom: 200px;
+}
+
+#main-menu button {
+    font-size: 48px;
+    line-height: 1;
+    padding: 5px 20px;
+    background-color: var(--color1);
+    color: var(--color2);
+    border: 1px solid transparent;
+}
+
+#main-menu button:hover {
+    border: 1px solid var(--color2);
+    cursor: pointer;
 }

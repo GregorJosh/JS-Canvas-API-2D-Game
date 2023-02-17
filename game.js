@@ -1,31 +1,19 @@
-onload = function () {
+window.onload = () => {
   const color1 = "#7B6662";
   const game = new Game();
 
-  const menu = new Scene(game, "Main Menu");
-  
-  const bg = new Img(
-    game,
-    0,
-    0,
-    menu.width,
-    menu.height,
-    "images/bg.png"
-  );
+  const menu = new Scene(game, "Main Menu", "html");
+  menu.onUpdate = () => {
+    document.getElementById("fps").innerHTML = game.fps;
+    document.getElementById("mouse").innerHTML =
+      Input.mouse.x + ":" + Input.mouse.y;
+  };
 
-  const button = new Button(
-    game,
-    "center",
-    "middle",
-    300,
-    50,
-    "Start Game",
-    "white",
-    color1 
-  );
-  button.onClick = function () {
+  document.getElementById("start-game").onclick = () => {
     game.start("Level 1");
   };
+
+  const level1 = new Scene(game, "Level 1");
 
   const fps = new TextField(game, 10, 10, 200, 25, "white", color1);
   fps.label.align = "left";
@@ -39,13 +27,6 @@ onload = function () {
     this.label.text = "Mouse: " + Input.mouse.x + ":" + Input.mouse.y;
   };
 
-  menu.addGameObject(bg);
-  menu.addGameObject(button);
-  menu.addGameObject(fps);
-  menu.addGameObject(mouseXY);
-
-  const level1 = new Scene(game, "Level 1");
-  
   const world = new TileMap(
     game,
     60,
