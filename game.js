@@ -73,7 +73,7 @@ onload = function () {
 
   level1.onUpdate = function () {
     if (Input.getKey("Escape")) {
-      game.start(0);
+      game.start("Main Menu");
     }
 
     if (Input.getKey("w")) {
