@@ -147,6 +147,9 @@ class GameObject {
   parent = null;
   gameObjects = [];
 
+  static uid = 0;
+  id = 0;
+
   constructor(game, x, y, width, height) {
     this.transform = new Transform(game);
 
@@ -157,6 +160,9 @@ class GameObject {
 
     this.width = width;
     this.height = height;
+
+    this.id = GameObject.uid;
+    GameObject.uid++;
   }
 
   addGameObject(gameObject) {
@@ -702,11 +708,12 @@ class Scene extends GameObject {
   type = "canvas";
   canvas = null;
   context = null;
-  div = null;
   animFrame = 0;
   prevTimeStamp = 0;
   lastFrameDurMs = 0;
   lastFrameDurSec = 0;
+  container = null;
+  state = "stopped";
 
   constructor(game, name = "", type = "") {
     const width = window.innerWidth;
@@ -724,7 +731,7 @@ class Scene extends GameObject {
     if (name) {
       this.name = name;
     }
-    
+
     if (type) {
       this.type = type;
     }
@@ -732,55 +739,66 @@ class Scene extends GameObject {
 
   init() {
     if (this.type == "canvas") {
-      this.canvas = document.createElement("canvas");
-      this.canvas.width = this.width;
-      this.canvas.height = this.height;
+      const canvas = document.createElement("canvas");
 
-      this.context = this.canvas.getContext("2d");
+      canvas.width = this.width;
+      canvas.height = this.height;
+
+      this.context = canvas.getContext("2d");
+      this.canvas = canvas;
     } else if (this.type == "html") {
-      const regex = / /i;
-      const id = this.name.replace(regex, "-").toLowerCase();
-      
-      console.log(id);
+      const id = this.name.replace(/ /i, "-").toLowerCase();
+      const container = document.getElementById(id);
+
+      this.container = container;
     }
   }
 
   start() {
-    if (!this.canvas) {
-      this.init();
+    this.init();
+
+    if (this.canvas) {
+      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+    } else if (this.container) {
+      this.container.classList.remove("removed");
     }
 
-    document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-
-    this.animFrame = requestAnimationFrame((timeStamp) =>
+    this.animFrame = window.requestAnimationFrame((timeStamp) =>
       this.nextFrame(timeStamp)
     );
+
+    this.state = "playing";
   }
 
   stop() {
     if (this.canvas) {
-      cancelAnimationFrame(this.animFrame);
-
       this.context = null;
       this.canvas.remove();
       this.canvas = null;
+    } else if (this.container) {
+      this.container.classList.add("removed");
+      this.container = null;
     }
+
+    window.cancelAnimationFrame(this.animFrame);
+    this.animFrame = 0;
+    this.state = "stopped";
   }
 
   nextFrame(timeStamp) {
-    if (this.context) {
-      this.lastFrameDurMs = timeStamp - this.prevTimeStamp;
-      this.lastFrameDurSec = this.lastFrameDurMs / 1000;
+    this.lastFrameDurMs = timeStamp - this.prevTimeStamp;
+    this.lastFrameDurSec = this.lastFrameDurMs / 1000;
 
-      const fps = 1 / this.lastFrameDurSec;
+    const fps = 1 / this.lastFrameDurSec;
 
-      this.prevTimeStamp = timeStamp;
-      this.game.fps = Math.round(fps);
+    this.prevTimeStamp = timeStamp;
+    this.game.fps = Math.round(fps);
 
-      this.update();
-      this.draw();
+    this.update();
+    this.draw();
 
-      this.animFrame = requestAnimationFrame((timeStamp) =>
+    if (this.state == "playing") {
+      this.animFrame = window.requestAnimationFrame((timeStamp) =>
         this.nextFrame(timeStamp)
       );
     }
@@ -795,9 +813,7 @@ class Scene extends GameObject {
   }
 
   clear() {
-    if (this.context) {
-      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }
+    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
   }
 
   draw() {
