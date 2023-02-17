@@ -723,10 +723,10 @@ class Input {
     btnDown.innerHTML = "&darr;";
     btnRight.innerHTML = "&rarr;";
 
-    this.setBtnStyle(btnUp, fontSize, fontWeight, margin, "0px 20px");
-    this.setBtnStyle(btnDown, fontSize, fontWeight, margin, "0px 20px");
-    this.setBtnStyle(btnLeft, fontSize, fontWeight, margin);
-    this.setBtnStyle(btnRight, fontSize, fontWeight, margin);
+    this.#setBtnStyle(btnUp, fontSize, fontWeight, margin, "0px 20px");
+    this.#setBtnStyle(btnDown, fontSize, fontWeight, margin, "0px 20px");
+    this.#setBtnStyle(btnLeft, fontSize, fontWeight, margin);
+    this.#setBtnStyle(btnRight, fontSize, fontWeight, margin);
 
     div1.appendChild(btnUp);
     div2.appendChild(btnLeft);
