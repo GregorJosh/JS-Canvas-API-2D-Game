@@ -15,18 +15,6 @@ window.onload = () => {
 
   const level1 = new Scene(game, "Level 1");
 
-  const fps = new TextField(game, 10, 10, 200, 25, "white", color1);
-  fps.label.align = "left";
-  fps.onUpdate = function () {
-    this.label.text = "FPS: " + game.fps;
-  };
-
-  const mouseXY = new TextField(game, 10, 45, 200, 25, "white", color1);
-  mouseXY.label.align = "left";
-  mouseXY.onUpdate = function () {
-    this.label.text = "Mouse: " + Input.mouse.x + ":" + Input.mouse.y;
-  };
-
   const world = new TileMap(
     game,
     60,
@@ -80,8 +68,6 @@ window.onload = () => {
 
   level1.addGameObject(world);
   level1.addGameObject(player);
-  level1.addGameObject(fps);
-  level1.addGameObject(mouseXY);
 
   game.addScene(menu);
   game.addScene(level1);
