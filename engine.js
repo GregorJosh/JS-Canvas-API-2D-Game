@@ -161,8 +161,10 @@ class GameObject {
     this.width = width;
     this.height = height;
 
-    this.id = GameObject.uid;
-    GameObject.uid++;
+    this.id = this.constructor.name + GameObject.uid;
+    GameObject.uid++; 
+    
+    console.log(this.id);
   }
 
   addGameObject(gameObject) {
@@ -632,15 +634,11 @@ class Input {
     }
 
     window.onkeydown = (event) => {
-      if (!this.keys) {
-        this.keys = [];
-      }
-
-      this.keys[event.key] = true;
+      this.setKey(event.key);
     };
 
     window.onkeyup = (event) => {
-      this.keys[event.key] = false;
+      this.unsetKey(event.key);
     };
 
     window.onmousedown = (event) => {
@@ -666,6 +664,18 @@ class Input {
     } else {
       return false;
     }
+  }
+  
+  static setKey(key) {
+    if (!this.keys) {
+      this.keys = [];
+    }
+    
+    this.keys[key] = true;
+  }
+  
+  static unsetKey(key) {
+    this.keys[key] = false;
   }
 
   static getButton(button) {
@@ -708,20 +718,23 @@ class Scene extends GameObject {
   type = "canvas";
   canvas = null;
   context = null;
-  animFrame = 0;
+  animFrame = false;
   prevTimeStamp = 0;
   lastFrameDurMs = 0;
   lastFrameDurSec = 0;
   container = null;
+  controlPanel = null;
   state = "stopped";
 
   constructor(game, name = "", type = "") {
     const width = window.innerWidth;
 
     let height = 0;
+    let controlPanel = null;
 
     if (Input.touchScreen) {
       height = window.innerHeight / 2;
+      controlPanel = document.getElementById("control-panel");
     } else {
       height = window.innerHeight;
     }
@@ -734,6 +747,10 @@ class Scene extends GameObject {
 
     if (type) {
       this.type = type;
+    }
+    
+    if (controlPanel) {
+      this.controlPanel = controlPanel;
     }
   }
 
@@ -762,6 +779,10 @@ class Scene extends GameObject {
     } else if (this.container) {
       this.container.classList.remove("removed");
     }
+    
+    if (this.controlPanel) {
+      this.controlPanel.classList.remove("removed");
+    }
 
     this.animFrame = window.requestAnimationFrame((timeStamp) =>
       this.nextFrame(timeStamp)
@@ -778,10 +799,13 @@ class Scene extends GameObject {
     } else if (this.container) {
       this.container.classList.add("removed");
       this.container = null;
+    } 
+    
+    if (this.controlPanel) {
+      this.controlPanel.classList.add("removed");
     }
 
     window.cancelAnimationFrame(this.animFrame);
-    this.animFrame = 0;
     this.state = "stopped";
   }
 
@@ -801,10 +825,46 @@ class Scene extends GameObject {
       this.animFrame = window.requestAnimationFrame((timeStamp) =>
         this.nextFrame(timeStamp)
       );
+    } else if (this.state == "stopped") {
+      this.animFrame = false;
     }
   }
 
   update() {
+    if (this.controlPanel) {
+      document.getElementById("btn-up").ontouchstart = () => {
+        Input.setKey("ArrowUp");
+      };
+      
+      document.getElementById("btn-up").ontouchend = () => {
+        Input.unsetKey("ArrowUp");
+      };
+      
+      document.getElementById("btn-down").ontouchstart = () => {
+        Input.setKey("ArrowDown");
+      };
+      
+      document.getElementById("btn-down").ontouchend = () => {
+        Input.unsetKey("ArrowDown");
+      };
+      
+      document.getElementById("btn-left").ontouchstart = () => {
+        Input.setKey("ArrowLeft");
+      };
+      
+      document.getElementById("btn-left").ontouchend = () => {
+        Input.unsetKey("ArrowLeft");
+      }; 
+      
+      document.getElementById("btn-right").ontouchstart = () => {
+        Input.setKey("ArrowRight");
+      };
+      
+      document.getElementById("btn-right").ontouchend = () => {
+        Input.unsetKey("ArrowRight");
+      };
+    }
+    
     super.update();
 
     for (let i = 0; i < this.gameObjects.length; ++i) {

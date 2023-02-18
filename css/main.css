@@ -16,6 +16,10 @@ body {
     overflow: hidden;
 }
 
+button {
+  user-select: none;
+}
+
 .removed {
     display: none;
 }
@@ -26,6 +30,11 @@ body {
 
     font-size: 24px;
     font-weight: 700;
+}
+
+.control-panel {
+  width: 100vw;
+  height: 50vh;
 }
 
 #main-menu {
@@ -60,4 +69,14 @@ body {
 #main-menu button:hover {
     border: 1px solid var(--color2);
     cursor: pointer;
+}
+
+#control-panel {
+  text-align: center;
+  padding: 100px 40px;
+}
+
+#control-panel button {
+  font-size: 48px;
+  padding: 0 0.5em;
 }

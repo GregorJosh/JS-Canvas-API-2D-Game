@@ -57,22 +57,22 @@ window.onload = () => {
       game.start("Main Menu");
     }
 
-    if (Input.getKey("w")) {
+    if (Input.getKey("w") || Input.getKey("ArrowUp")) {
       player.moveUp();
       player.animate("walk up");
     }
 
-    if (Input.getKey("s")) {
+    if (Input.getKey("s") || Input.getKey("ArrowDown")) {
       player.moveDown();
       player.animate("walk down");
     }
 
-    if (Input.getKey("a")) {
+    if (Input.getKey("a") || Input.getKey("ArrowLeft")) {
       player.moveLeft();
       player.animate("walk left");
     }
 
-    if (Input.getKey("d")) {
+    if (Input.getKey("d") || Input.getKey("ArrowRight")) {
       player.moveRight();
       player.animate("walk right");
     }
