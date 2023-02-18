@@ -725,7 +725,6 @@ class Scene extends GameObject {
   lastFrameDurMs = 0;
   lastFrameDurSec = 0;
   container = null;
-  secLayerContainer = null;
   controlPanel = null;
   state = "stopped";
 
@@ -742,16 +741,16 @@ class Scene extends GameObject {
   }
 
   init() {
-    let width = 0;
-    let height = 0;
+    let width = window.innerWidth;
+    let height = window.innerHeight;
     let controlPanel = null;
     let container = null;
 
     container = Scene.getElementBySceneName(this.name);
     
     if (container) {
-      container.height = height = window.innerHeight;
-      container.width = width = window.innerWidth;
+      container.height = height;
+      container.width = width;
 
       this.container = container;
     }
@@ -760,7 +759,7 @@ class Scene extends GameObject {
       const canvas = document.getElementById(this.canvasId);
       
       if (Input.touchScreen) {
-        canvas.height = window.innerHeight / 2;
+        canvas.height = height / 2;
         controlPanel = document.getElementById("control-panel");
       } else {
         canvas.height = height;
@@ -782,19 +781,17 @@ class Scene extends GameObject {
 
   start() {
     this.init();
-
-    if (this.canvas) {
-      this.canvas.classList.remove("removed");
-    } else if (this.container) {
+    
+    if (this.container) {
       this.container.classList.remove("removed");
-    }
-
-    if (this.secLayerContainer) {
-      this.secLayerContainer.classList.remove("removed");
     }
     
     if (this.controlPanel) {
       this.controlPanel.classList.remove("removed");
+    }
+    
+    if (this.canvas) {
+      this.canvas.classList.remove("removed");
     }
 
     this.animFrame = window.requestAnimationFrame((timeStamp) =>
@@ -805,24 +802,24 @@ class Scene extends GameObject {
   }
 
   stop() {
-    if (this.canvas) {
-      this.context = null;
-      this.canvas.classList.add("removed");
-      this.canvas = null;
-    } else if (this.container) {
+    if (this.container) {
       this.container.classList.add("removed");
       this.container = null;
-    } 
-
-    if (this.secLayerContainer) {
-      this.secLayerContainer.classList.add("removed");
     }
     
     if (this.controlPanel) {
       this.controlPanel.classList.add("removed");
+      this.controlPanel = null;
+    }
+    
+    if (this.canvas) {
+      this.context = null;
+      this.canvas.classList.add("removed");
+      this.canvas = null;
     }
 
     window.cancelAnimationFrame(this.animFrame);
+    
     this.state = "stopped";
   }
 
@@ -887,6 +884,10 @@ class Scene extends GameObject {
       };
     }
     
+    if (this.game.onUpdate) {
+      this.game.onUpdate();
+    }
+    
     super.update();
 
     for (let i = 0; i < this.gameObjects.length; ++i) {
@@ -908,10 +909,6 @@ class Scene extends GameObject {
     }
   }
 
-  set2ndLayerCont(containerId) {
-    this.secLayerContainer = document.getElementById(containerId);
-  }
-
   static getElementBySceneName(sceneName) {
     const id = sceneName.replace(/ /i, "-").toLowerCase();
     const element = document.getElementById(id);
@@ -924,6 +921,7 @@ class Game {
   fps = 0;
   scenes = [];
   currentScene = null;
+  onUpdate = null;
 
   start(sceneName) {
     if (this.currentScene) {
