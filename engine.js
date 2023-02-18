@@ -832,35 +832,40 @@ class Scene extends GameObject {
 
   update() {
     if (this.controlPanel) {
-      document.getElementById("btn-up").ontouchstart = () => {
+      const btnUp = document.getElementById("btn-up");
+      const btnDown = document.getElementById("btn-down");
+      const btnLeft = document.getElementById("btn-left");
+      const btnRight = document.getElementById("btn-right");
+
+      btnUp.ontouchstart = () => {
         Input.setKey("ArrowUp");
       };
       
-      document.getElementById("btn-up").ontouchend = () => {
+      btnUp.ontouchend = () => {
         Input.unsetKey("ArrowUp");
       };
       
-      document.getElementById("btn-down").ontouchstart = () => {
+      btnDown.ontouchstart = () => {
         Input.setKey("ArrowDown");
       };
       
-      document.getElementById("btn-down").ontouchend = () => {
+      btnDown.ontouchend = () => {
         Input.unsetKey("ArrowDown");
       };
       
-      document.getElementById("btn-left").ontouchstart = () => {
+      btnLeft.ontouchstart = () => {
         Input.setKey("ArrowLeft");
       };
       
-      document.getElementById("btn-left").ontouchend = () => {
+      btnLeft.ontouchend = () => {
         Input.unsetKey("ArrowLeft");
       }; 
       
-      document.getElementById("btn-right").ontouchstart = () => {
+      btnRight.ontouchstart = () => {
         Input.setKey("ArrowRight");
       };
       
-      document.getElementById("btn-right").ontouchend = () => {
+      btnRight.ontouchend = () => {
         Input.unsetKey("ArrowRight");
       };
     }
