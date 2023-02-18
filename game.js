@@ -1,10 +1,13 @@
 window.onload = () => {
   const color1 = "#7B6662";
   const game = new Game();
-  game.onUpdate = () => {
-    document.getElementById("fps").innerHTML = game.fps;
-    document.getElementById("mouse").innerHTML =
-      Input.mouse.x + ":" + Input.mouse.y;
+
+  game.onUpdate = function () {
+    const fps = document.getElementById("fps");
+    const mouse = document.getElementById("mouse");
+
+    fps.innerHTML = game.fps;
+    mouse.innerHTML = Input.mouse.x + ":" + Input.mouse.y;
   }
 
   const menu = new Scene(game, "Main Menu", "html");
