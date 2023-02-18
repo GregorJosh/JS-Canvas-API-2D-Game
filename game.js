@@ -1,23 +1,8 @@
 window.onload = () => {
   const color1 = "#7B6662";
   const game = new Game();
-
-  game.onUpdate = function () {
-    const fps = document.getElementById("fps");
-    const mouse = document.getElementById("mouse");
-
-    fps.innerHTML = game.fps;
-    mouse.innerHTML = Input.mouse.x + ":" + Input.mouse.y;
-  }
-
   const menu = new Scene(game, "Main Menu", "html");
-
-  document.getElementById("start-game").onclick = () => {
-    game.start("Level 1");
-  };
-
   const level1 = new Scene(game, "Level 1");
-
   const world = new TileMap(
     game,
     60,
@@ -26,24 +11,24 @@ window.onload = () => {
     32,
     32
   );
-
   const player = new Character(
     game,
-    200,
-    200,
+    "center",
+    "middle",
     80,
     100,
     "images/skeleton_walk.png",
     -9,
     -4
   );
-  player.addAnimation("walk up", 1, 9);
-  player.addAnimation("walk down", 3, 9);
-  player.addAnimation("walk left", 2, 9);
-  player.addAnimation("walk right", 4, 9);
-  player.addAnimation("idle", 4, 1);
 
-  level1.onUpdate = function () {
+  game.onUpdate = () => {
+    document.getElementById("fps").innerHTML = game.fps;
+    document.getElementById("mouse").innerHTML =
+      Input.mouse.x + ":" + Input.mouse.y;
+  };
+
+  level1.onUpdate = () => {
     if (Input.getKey("Escape")) {
       game.start("Main Menu");
     }
@@ -68,6 +53,20 @@ window.onload = () => {
       player.animate("walk right");
     }
   };
+
+  document.getElementById("start-game").onclick = () => {
+    game.start("Level 1");
+  };
+
+  document.getElementById("quit-game").onclick = () => {
+    game.start("Main Menu");
+  };
+
+  player.addAnimation("walk up", 1, 9);
+  player.addAnimation("walk down", 3, 9);
+  player.addAnimation("walk left", 2, 9);
+  player.addAnimation("walk right", 4, 9);
+  player.addAnimation("idle", 4, 1);
 
   level1.addGameObject(world);
   level1.addGameObject(player);
