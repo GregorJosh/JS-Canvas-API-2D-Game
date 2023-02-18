@@ -19,6 +19,8 @@ body {
   position: relative;
   width: 100vw;
   height: 100vh;
+  font-size: 1rem;
+  font-weight: 700;
 }
 
 .canvas,
@@ -49,15 +51,19 @@ body {
 
 button {
   user-select: none;
+  padding: 5px 20px;
+  background-color: var(--color1);
+  color: var(--color2);
+  border: 1px solid transparent;
+}
+
+button:hover {
+  border: 1px solid var(--color2);
+  cursor: pointer;
 }
 
 .removed {
   display: none;
-}
-
-.ui {
-  font-size: 1rem;
-  font-weight: 700;
 }
 
 .text-field {
@@ -74,25 +80,23 @@ button {
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-
   text-align: center;
 }
 
 #main-menu button {
   font-size: 3rem;
-  padding: 5px 20px;
-  background-color: var(--color1);
-  color: var(--color2);
-  border: 1px solid transparent;
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
 }
 
-#main-menu button:hover {
-  border: 1px solid var(--color2);
-  cursor: pointer;
+#quit-game {
+  font-size: 1.5rem;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  margin: 20px;
 }
 
 #control-panel {
