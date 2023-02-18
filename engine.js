@@ -169,6 +169,7 @@ class GameObject {
 
   addGameObject(gameObject) {
     gameObject.parent = this;
+
     this.gameObjects.push(gameObject);
   }
 
@@ -716,6 +717,7 @@ class Scene extends GameObject {
   name = "Scene Name";
   game = null;
   type = "canvas";
+  canvasId = "main-canvas";
   canvas = null;
   context = null;
   animFrame = false;
@@ -723,23 +725,12 @@ class Scene extends GameObject {
   lastFrameDurMs = 0;
   lastFrameDurSec = 0;
   container = null;
+  secLayerContainer = null;
   controlPanel = null;
   state = "stopped";
 
   constructor(game, name = "", type = "") {
-    const width = window.innerWidth;
-
-    let height = 0;
-    let controlPanel = null;
-
-    if (Input.touchScreen) {
-      height = window.innerHeight / 2;
-      controlPanel = document.getElementById("control-panel");
-    } else {
-      height = window.innerHeight;
-    }
-
-    super(game, 0, 0, width, height);
+    super(game, 0, 0, 0, 0);
 
     if (name) {
       this.name = name;
@@ -748,26 +739,44 @@ class Scene extends GameObject {
     if (type) {
       this.type = type;
     }
-    
-    if (controlPanel) {
-      this.controlPanel = controlPanel;
-    }
   }
 
   init() {
-    if (this.type == "canvas") {
-      const canvas = document.createElement("canvas");
+    let width = 0;
+    let height = 0;
+    let controlPanel = null;
+    let container = null;
 
-      canvas.width = this.width;
-      canvas.height = this.height;
+    container = Scene.getElementBySceneName(this.name);
+    
+    if (container) {
+      container.height = height = window.innerHeight;
+      container.width = width = window.innerWidth;
+
+      this.container = container;
+    }
+
+    if (this.type == "canvas") {
+      const canvas = document.getElementById(this.canvasId);
+      
+      if (Input.touchScreen) {
+        canvas.height = window.innerHeight / 2;
+        controlPanel = document.getElementById("control-panel");
+      } else {
+        canvas.height = height;
+      }
+      
+      canvas.width = width;
 
       this.context = canvas.getContext("2d");
       this.canvas = canvas;
-    } else if (this.type == "html") {
-      const id = this.name.replace(/ /i, "-").toLowerCase();
-      const container = document.getElementById(id);
+    }
 
-      this.container = container;
+    this.width = width;
+    this.height = height;
+
+    if (controlPanel) {
+      this.controlPanel = controlPanel;
     }
   }
 
@@ -775,9 +784,13 @@ class Scene extends GameObject {
     this.init();
 
     if (this.canvas) {
-      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
+      this.canvas.classList.remove("removed");
     } else if (this.container) {
       this.container.classList.remove("removed");
+    }
+
+    if (this.secLayerContainer) {
+      this.secLayerContainer.classList.remove("removed");
     }
     
     if (this.controlPanel) {
@@ -794,12 +807,16 @@ class Scene extends GameObject {
   stop() {
     if (this.canvas) {
       this.context = null;
-      this.canvas.remove();
+      this.canvas.classList.add("removed");
       this.canvas = null;
     } else if (this.container) {
       this.container.classList.add("removed");
       this.container = null;
     } 
+
+    if (this.secLayerContainer) {
+      this.secLayerContainer.classList.add("removed");
+    }
     
     if (this.controlPanel) {
       this.controlPanel.classList.add("removed");
@@ -889,6 +906,17 @@ class Scene extends GameObject {
         this.gameObjects[i].draw(this.context);
       }
     }
+  }
+
+  set2ndLayerCont(containerId) {
+    this.secLayerContainer = document.getElementById(containerId);
+  }
+
+  static getElementBySceneName(sceneName) {
+    const id = sceneName.replace(/ /i, "-").toLowerCase();
+    const element = document.getElementById(id);
+
+    return element;
   }
 }
 
