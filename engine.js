@@ -85,6 +85,7 @@ class GameObject {
   keysCmdMap = null;
   cmdCbMap = null;
   cmdList = [];
+  lastCommand = "";
 
   static uid = 0;
   id = 0;
@@ -146,7 +147,9 @@ class GameObject {
     }
 
     for (let i = 0; i < this.cmdList.length; i++) {
-      const callback = this.cmdCbMap.get(this.cmdList[i]);
+      this.lastCommand = this.cmdList[i];
+
+      const callback = this.cmdCbMap.get(this.lastCommand);
 
       callback();
     }
@@ -435,15 +438,17 @@ class TextField extends GameObject {
 }
 
 class AnimState extends Component {
-  sheetRow = 1;
-  frame = 1;
-  numOfFrames = 0;
   name = "idle";
+  duration = 1500;
+  sheetRow = 1;
   isPlaying = false;
-  duration = 1000;
+
+  frame = 1;
   frameDuration = 0;
-  numOfIterations = 0;
+  numOfFrames = 0;
+
   iteration = 0;
+  numOfIterations = 0;
 
   constructor(game, name, sheetRow, numOfFrames) {
     super(game);
@@ -453,8 +458,27 @@ class AnimState extends Component {
     this.numOfFrames = numOfFrames;
   }
 
+  pause() {
+    this.isPlaying = false;
+  }
+
+  resume() {
+    this.isPlaying = true;
+  }
+
+  rewind() {
+    this.frame = 1;
+  }
+
+  stop() {
+    this.pause();
+    this.rewind();
+
+    this.frameDuration = 0;
+  }
+
   update() {
-    if (this.isPlaying) {
+    if (this.isPlaying && this.numOfFrames > 1) {
       if (this.iteration > this.numOfIterations) {
         this.stop();
         this.iteration = 0;
@@ -475,25 +499,6 @@ class AnimState extends Component {
         }
       }
     }
-  }
-
-  resume() {
-    this.isPlaying = true;
-  }
-
-  pause() {
-    this.isPlaying = false;
-  }
-
-  rewind() {
-    this.frame = 1;
-  }
-
-  stop() {
-    this.pause();
-    this.rewind();
-
-    this.frameDuration = 0;
   }
 }
 
@@ -519,7 +524,6 @@ class Sprite extends GameObject {
     const animState = new AnimState(this.game, name, sheetRow, numOfFrames);
 
     this.animStates[name] = animState;
-    this.animState = animState;
   }
 
   setAnimState(animState) {
@@ -528,8 +532,8 @@ class Sprite extends GameObject {
   }
 
   update() {
-    super.update();
     this.animState.update();
+    super.update();
   }
 
   draw(context) {
@@ -612,14 +616,12 @@ class Character extends Sprite {
     y: 0,
   };
 
-  onMoveLeft = null;
-  onMoveRight = null;
-  onMoveUp = null;
-  onMoveDown = null;
-  onJump = null;
+  isMoving = false;
+  isJumping = false;
 
   update() {
-    const lastFrameSeconds = this.game.getScene().lastFrameDurSec;
+    const scene = this.game.getScene();
+    const lastFrameSeconds = scene.lastFrameDurSec;
 
     super.update();
 
@@ -628,30 +630,27 @@ class Character extends Sprite {
 
     this.velocity.x = 0;
     this.velocity.y = 0;
+    this.isMoving = false;
   }
 
   moveLeft() {
     this.velocity.x -= this.speed;
-
-    if (this.onMoveLeft) this.onMoveLeft();
+    this.isMoving = true;
   }
 
   moveRight() {
     this.velocity.x += this.speed;
-
-    if (this.onMoveRight) this.onMoveRight();
+    this.isMoving = true;
   }
 
   moveUp() {
     this.velocity.y -= this.speed;
-
-    if (this.onMoveUp) this.onMoveUp();
+    this.isMoving = true;
   }
 
   moveDown() {
     this.velocity.y += this.speed;
-
-    if (this.onMoveUp) this.onMoveUp();
+    this.isMoving = true;
   }
 }
 

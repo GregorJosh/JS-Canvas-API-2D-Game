@@ -37,7 +37,11 @@ window.onload = () => {
   player.addAnimState("walk down", 3, 9);
   player.addAnimState("walk left", 2, 9);
   player.addAnimState("walk right", 4, 9);
-  player.addAnimState("idle", 4, 1);
+
+  player.addAnimState("look up", 1, 1);
+  player.addAnimState("look down", 3, 1);
+  player.addAnimState("look left", 2, 1);
+  player.addAnimState("look right", 4, 1);
 
   player.addCmdKeys(["w"], "walk up", ["ArrowUp"]);
   player.addCmdKeys(["s"], "walk down", ["ArrowDown"]);
@@ -63,6 +67,26 @@ window.onload = () => {
     player.moveRight();
     player.setAnimState("walk right");
   });
+
+  player.onUpdate = () => {
+    if (!player.isMoving) {
+      if (player.lastCommand == "walk left") {
+        player.setAnimState("look left");
+      }
+      
+      if (player.lastCommand == "walk right") {
+        player.setAnimState("look right");
+      }
+
+      if (player.lastCommand == "walk up") {
+        player.setAnimState("look up");
+      }
+
+      if (player.lastCommand == "walk down") {
+        player.setAnimState("look down");
+      }
+    }
+  }
 
   level1.addGameObject(world);
   level1.addGameObject(player);
