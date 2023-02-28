@@ -6,71 +6,6 @@ class Component {
   }
 }
 
-class Anim extends Component {
-  sheetRowId = 1;
-  frame = 1;
-  numOfFrames = 0;
-  name = "idle";
-  isPlaying = false;
-  duration = 1000;
-  frameDuration = 0;
-  numOfIterations = 0;
-  iteration = 0;
-
-  constructor(game, name, sheetRowId, numOfFrames, speed = null) {
-    super(game);
-
-    this.name = name;
-    this.sheetRowId = sheetRowId;
-    this.numOfFrames = numOfFrames;
-
-    if (speed) {
-      this.speed = speed;
-    }
-  }
-
-  animate() {
-    if (this.isPlaying) {
-      this.frameDuration = this.duration / this.numOfFrames;
-      this.frame++;
-
-      if (this.frame > this.numOfFrames) {
-        this.rewind();
-        this.iteration++;
-      }
-
-      if (this.iteration > this.numOfIterations - 1) {
-        this.stop();
-        this.iteration = 0;
-      }
-    }
-  }
-
-  resume() {
-    this.isPlaying = true;
-  }
-
-  pause() {
-    this.isPlaying = false;
-  }
-
-  play(iterations) {
-    if (this.numOfFrames > 1) {
-      this.isPlaying = true;
-      this.numOfIterations = iterations;
-    }
-  }
-
-  rewind() {
-    this.frame = 1;
-  }
-
-  stop() {
-    this.pause();
-    this.rewind();
-  }
-}
-
 class Transform extends Component {
   position = {
     x: 0,
@@ -147,11 +82,17 @@ class GameObject {
   parent = null;
   gameObjects = [];
 
+  keysCmdMap = null;
+  cmdCbMap = null;
+  cmdList = [];
+
   static uid = 0;
   id = 0;
 
   constructor(game, x, y, width, height) {
     this.transform = new Transform(game);
+    this.keysCmdMap = new Map();
+    this.cmdCbMap = new Map();
 
     this.game = game;
 
@@ -173,10 +114,44 @@ class GameObject {
     this.gameObjects.push(gameObject);
   }
 
+  addCmdKeys(primKeys, cmd, secKeys = null) {
+    this.keysCmdMap.set(primKeys, cmd);
+
+    if (secKeys) {
+      this.keysCmdMap.set(secKeys, cmd);
+    }
+  }
+
+  onCommand(cmd, callback) {
+    this.cmdCbMap.set(cmd, callback);
+  }
+
   update() {
     if (this.onUpdate) {
       this.onUpdate();
     }
+
+    for (const [keys, cmd] of this.keysCmdMap) {
+      let areAllpressed = true;
+
+      for (let i = 0; i < keys.length; i++) {
+        if (!Input.getKey(keys[i])) {
+          areAllpressed = false;
+        }
+      }
+      
+      if (areAllpressed) {
+        this.cmdList.push(cmd);
+      }
+    }
+
+    for (let i = 0; i < this.cmdList.length; i++) {
+      const callback = this.cmdCbMap.get(this.cmdList[i]);
+
+      callback();
+    }
+
+    this.cmdList = [];
 
     if (this.position.x == "center") {
       this.position.x = this.game.getScene().canvas.width / 2;
@@ -459,46 +434,109 @@ class TextField extends GameObject {
   }
 }
 
-class Sprite extends GameObject {
-  animation = null;
-  prevAnimation = null;
-  sheet = null;
+class AnimState extends Component {
+  sheetRow = 1;
+  frame = 1;
+  numOfFrames = 0;
+  name = "idle";
+  isPlaying = false;
+  duration = 1000;
+  frameDuration = 0;
+  numOfIterations = 0;
+  iteration = 0;
 
-  animations = [];
+  constructor(game, name, sheetRow, numOfFrames) {
+    super(game);
+
+    this.name = name;
+    this.sheetRow = sheetRow;
+    this.numOfFrames = numOfFrames;
+  }
+
+  update() {
+    if (this.isPlaying) {
+      if (this.iteration > this.numOfIterations) {
+        this.stop();
+        this.iteration = 0;
+        return;
+      }
+
+      const scene = this.game.getScene();
+      const lastFrameDur = scene.lastFrameDurMs;
+      this.frameDuration -= lastFrameDur;
+      
+      if (this.frameDuration < 0) {
+        this.frame++;
+        this.frameDuration = this.duration / this.numOfFrames;
+
+        if (this.frame > this.numOfFrames) {
+          this.rewind();
+          this.iteration++;
+        }
+      }
+    }
+  }
+
+  resume() {
+    this.isPlaying = true;
+  }
+
+  pause() {
+    this.isPlaying = false;
+  }
+
+  rewind() {
+    this.frame = 1;
+  }
+
+  stop() {
+    this.pause();
+    this.rewind();
+
+    this.frameDuration = 0;
+  }
+}
+
+class Sprite extends GameObject {
+  animState = null;
+  prevAnimState = null;
+  sheet = null;
+  defaultAnimState = "idle";
+  isPlaying = false;
+
+  animStates = [];
 
   constructor(game, x, y, width, height, atlas, tileWidth, tileHeight) {
     super(game, x, y, width, height);
 
     this.sheet = new SpriteSheet(game, atlas, tileWidth, tileHeight);
 
-    this.addAnimation("idle", 1, 1);
-    this.animate("idle");
+    this.addAnimState(this.defaultAnimState, 1, 1);
+    this.setAnimState(this.defaultAnimState);
   }
 
-  addAnimation(name, sheetRowId, numOfFrames) {
-    const anim = new Anim(this.game, name, sheetRowId, numOfFrames);
+  addAnimState(name, sheetRow, numOfFrames) {
+    const animState = new AnimState(this.game, name, sheetRow, numOfFrames);
 
-    this.animations[name] = anim;
-    this.animation = anim;
+    this.animStates[name] = animState;
+    this.animState = animState;
   }
 
-  animate(name) {
-    this.prevAnimation = this.animation;
-    this.animation = this.animations[name];
-
-    this.animation.play(1);
+  setAnimState(animState) {
+    this.animState = this.animStates[animState];
+    this.animState.resume();
   }
 
   update() {
     super.update();
-    this.animation.animate();
+    this.animState.update();
   }
 
   draw(context) {
     context.drawImage(
       this.sheet.getImage(),
-      this.sheet.tile.width * (this.animation.frame - 1),
-      this.sheet.tile.height * (this.animation.sheetRowId - 1),
+      this.sheet.tile.width * (this.animState.frame - 1),
+      this.sheet.tile.height * (this.animState.sheetRow - 1),
       this.sheet.tile.width,
       this.sheet.tile.height,
       this.position.x,
@@ -574,6 +612,12 @@ class Character extends Sprite {
     y: 0,
   };
 
+  onMoveLeft = null;
+  onMoveRight = null;
+  onMoveUp = null;
+  onMoveDown = null;
+  onJump = null;
+
   update() {
     const lastFrameSeconds = this.game.getScene().lastFrameDurSec;
 
@@ -588,18 +632,26 @@ class Character extends Sprite {
 
   moveLeft() {
     this.velocity.x -= this.speed;
+
+    if (this.onMoveLeft) this.onMoveLeft();
   }
 
   moveRight() {
     this.velocity.x += this.speed;
+
+    if (this.onMoveRight) this.onMoveRight();
   }
 
   moveUp() {
     this.velocity.y -= this.speed;
+
+    if (this.onMoveUp) this.onMoveUp();
   }
 
   moveDown() {
     this.velocity.y += this.speed;
+
+    if (this.onMoveUp) this.onMoveUp();
   }
 }
 

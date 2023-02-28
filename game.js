@@ -28,31 +28,48 @@ window.onload = () => {
       Input.mouse.x + ":" + Input.mouse.y;
   };
 
-  level1.onUpdate = () => {
-    if (Input.getKey("Escape")) {
-      game.start("Main Menu");
-    }
+  level1.addCmdKeys(["Escape"], "back to menu");
+  level1.onCommand("back to menu", () => {
+    game.start("Main Menu");
+  });
 
-    if (Input.getKey("w") || Input.getKey("ArrowUp")) {
-      player.moveUp();
-      player.animate("walk up");
-    }
+  player.addAnimState("walk up", 1, 9);
+  player.addAnimState("walk down", 3, 9);
+  player.addAnimState("walk left", 2, 9);
+  player.addAnimState("walk right", 4, 9);
+  player.addAnimState("idle", 4, 1);
 
-    if (Input.getKey("s") || Input.getKey("ArrowDown")) {
-      player.moveDown();
-      player.animate("walk down");
-    }
+  player.addCmdKeys(["w"], "walk up", ["ArrowUp"]);
+  player.addCmdKeys(["s"], "walk down", ["ArrowDown"]);
+  player.addCmdKeys(["a"], "walk left", ["ArrowLeft"]);
+  player.addCmdKeys(["d"], "walk right", ["ArrowRight"]);
 
-    if (Input.getKey("a") || Input.getKey("ArrowLeft")) {
-      player.moveLeft();
-      player.animate("walk left");
-    }
+  player.onCommand("walk up", () => {
+    player.moveUp();
+    player.setAnimState("walk up");
+  });
 
-    if (Input.getKey("d") || Input.getKey("ArrowRight")) {
-      player.moveRight();
-      player.animate("walk right");
-    }
-  };
+  player.onCommand("walk down", () => {
+    player.moveDown();
+    player.setAnimState("walk down");
+  });
+
+  player.onCommand("walk left", () => {
+    player.moveLeft();
+    player.setAnimState("walk left");
+  });
+
+  player.onCommand("walk right", () => {
+    player.moveRight();
+    player.setAnimState("walk right");
+  });
+
+  level1.addGameObject(world);
+  level1.addGameObject(player);
+
+  game.addScene(menu);
+  game.addScene(level1);
+  game.start("Main Menu");
 
   document.getElementById("start-game").onclick = () => {
     game.start("Level 1");
@@ -61,17 +78,4 @@ window.onload = () => {
   document.getElementById("quit-game").onclick = () => {
     game.start("Main Menu");
   };
-
-  player.addAnimation("walk up", 1, 9);
-  player.addAnimation("walk down", 3, 9);
-  player.addAnimation("walk left", 2, 9);
-  player.addAnimation("walk right", 4, 9);
-  player.addAnimation("idle", 4, 1);
-
-  level1.addGameObject(world);
-  level1.addGameObject(player);
-
-  game.addScene(menu);
-  game.addScene(level1);
-  game.start("Main Menu");
 };
