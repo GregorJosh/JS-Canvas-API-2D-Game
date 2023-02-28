@@ -616,8 +616,8 @@ class Character extends Sprite {
     y: 0,
   };
 
-  isMoving = false;
-  isJumping = false;
+  state = "is standing";
+  direction = "right";
 
   update() {
     const scene = this.game.getScene();
@@ -630,27 +630,31 @@ class Character extends Sprite {
 
     this.velocity.x = 0;
     this.velocity.y = 0;
-    this.isMoving = false;
+    this.state = "is standing";
   }
 
   moveLeft() {
+    this.direction = "left";
     this.velocity.x -= this.speed;
-    this.isMoving = true;
+    this.state = "is moving";
   }
 
   moveRight() {
+    this.direction = "right";
     this.velocity.x += this.speed;
-    this.isMoving = true;
+    this.state = "is moving";
   }
 
   moveUp() {
+    this.direction = "up";
     this.velocity.y -= this.speed;
-    this.isMoving = true;
+    this.state = "is moving";
   }
 
   moveDown() {
+    this.direction = "down";
     this.velocity.y += this.speed;
-    this.isMoving = true;
+    this.state = "is moving";
   }
 }
 

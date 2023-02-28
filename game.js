@@ -69,22 +69,8 @@ window.onload = () => {
   });
 
   player.onUpdate = () => {
-    if (!player.isMoving) {
-      if (player.lastCommand == "walk left") {
-        player.setAnimState("look left");
-      }
-      
-      if (player.lastCommand == "walk right") {
-        player.setAnimState("look right");
-      }
-
-      if (player.lastCommand == "walk up") {
-        player.setAnimState("look up");
-      }
-
-      if (player.lastCommand == "walk down") {
-        player.setAnimState("look down");
-      }
+    if (player.state == "is standing") {
+      player.setAnimState("look " + player.direction);
     }
   }
 
