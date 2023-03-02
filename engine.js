@@ -157,124 +157,17 @@ class GameObject {
     this.cmdList = [];
 
     if (this.position.x == "center") {
-      this.position.x = this.game.getScene().canvas.width / 2;
+      this.position.x = this.game.scene.canvas.width / 2;
       this.position.x -= this.width / 2;
     }
 
     if (this.position.y == "middle") {
-      this.position.y = this.game.getScene().canvas.height / 2;
+      this.position.y = this.game.scene.canvas.height / 2;
       this.position.y -= this.height / 2;
     }
 
     this.transform.position.x = this.position.x;
     this.transform.position.y = this.position.y;
-  }
-}
-
-class Rectangle extends GameObject {
-  background = "black";
-  color = null;
-  gameObject = null;
-
-  constructor(
-    game,
-    x,
-    y,
-    width,
-    height,
-    bg = null,
-    color = null,
-    gameObject = null
-  ) {
-    super(game, x, y, width, height);
-
-    if (bg) {
-      this.background = bg;
-    }
-
-    if (color) {
-      this.color = color;
-    }
-
-    if (gameObject) {
-      this.gameObject = gameObject;
-    }
-  }
-
-  update() {
-    super.update();
-  }
-
-  draw(context) {
-    context.fillStyle = this.background;
-    context.fillRect(this.position.x, this.position.y, this.width, this.height);
-
-    if (this.color) {
-      context.strokeStyle = this.color;
-      context.strokeRect(
-        this.position.x,
-        this.position.y,
-        this.width,
-        this.height
-      );
-    }
-  }
-}
-
-class Label extends GameObject {
-  gameObject = null;
-  x = 0;
-  y = 0;
-  text = "Label";
-  align = "center";
-  baseline = "middle";
-  font = "serif";
-
-  constructor(game, x, y, gameObject = null) {
-    super(game, x, y, 0, 0);
-
-    if (gameObject) {
-      this.gameObject = gameObject;
-    }
-
-    this.x = x;
-    this.y = y;
-  }
-
-  update() {
-    super.update();
-
-    switch (this.align) {
-      case "left":
-        this.x = this.gameObject.position.x;
-        break;
-      case "center":
-        this.x = this.gameObject.position.x + this.gameObject.width / 2;
-        break;
-      case "right":
-        this.x = this.gameObject.position.x + this.gameObject.width;
-    }
-
-    switch (this.baseline) {
-      case "top":
-        this.y = this.gameObject.position.y;
-        break;
-      case "middle":
-        this.y = this.gameObject.position.y + this.gameObject.height / 2;
-        break;
-      case "bottom":
-        this.y = this.gameObject.position.y + this.gameObject.height;
-    }
-  }
-
-  draw(context) {
-    context.font = this.gameObject.height + "px " + this.font;
-
-    context.textAlign = this.align;
-    context.textBaseline = this.baseline;
-
-    context.fillStyle = this.gameObject.color;
-    context.fillText(this.text, this.x, this.y, this.gameObject.width);
   }
 }
 
@@ -319,121 +212,6 @@ class Img extends GameObject {
       this.width,
       this.height
     );
-  }
-}
-
-class Button extends GameObject {
-  color = "white";
-  background = "black";
-  mouseOver = false;
-  onClick = null;
-  rectangle = null;
-  image = null;
-  label = null;
-
-  constructor(game, x, y, width, height, text, color = null, bg = null) {
-    super(game, x, y, width, height);
-
-    if (bg) {
-      this.background = bg;
-    }
-
-    if (color) {
-      this.color = color;
-    }
-
-    this.rectangle = new Rectangle(
-      game,
-      this.position.x,
-      this.position.y,
-      this.width,
-      this.height,
-      this.background,
-      this.color,
-      this
-    );
-
-    this.label = new Label(game, x, y, this);
-    this.label.text = text;
-
-    this.addGameObject(this.rectangle);
-    this.addGameObject(this.label);
-  }
-
-  update() {
-    super.update();
-
-    this.mouseOver = false;
-    this.rectangle.color = false;
-    this.game.getScene().canvas.style.cursor = "default";
-
-    if (
-      Input.mouse.x > this.position.x &&
-      Input.mouse.x < this.position.x + this.width &&
-      Input.mouse.y > this.position.y &&
-      Input.mouse.y < this.position.y + this.height
-    ) {
-      this.mouseOver = true;
-      this.rectangle.color = this.color;
-      this.game.getScene().canvas.style.cursor = "pointer";
-    }
-
-    if (Input.getButton("left") && this.mouseOver) {
-      this.onClick();
-    }
-
-    this.rectangle.update();
-    this.label.update();
-  }
-
-  draw(context) {
-    this.rectangle.draw(context);
-    this.label.draw(context);
-  }
-}
-
-class TextField extends GameObject {
-  background = "black";
-  color = "white";
-  onUpdate = null;
-  rectangle = null;
-  label = null;
-
-  constructor(game, x, y, width, height, color = null, bg = null) {
-    super(game, x, y, width, height);
-
-    if (bg) {
-      this.background = bg;
-    }
-
-    if (color) {
-      this.color = color;
-    }
-
-    this.rectangle = new Rectangle(
-      game,
-      this.position.x,
-      this.position.y,
-      this.width,
-      this.height,
-      this.background,
-      this.color,
-      this
-    );
-
-    this.label = new Label(game, x, y, this);
-  }
-
-  update() {
-    super.update();
-
-    this.rectangle.update();
-    this.label.update();
-  }
-
-  draw(context) {
-    this.rectangle.draw(context);
-    this.label.draw(context);
   }
 }
 
@@ -485,7 +263,7 @@ class AnimState extends Component {
         return;
       }
 
-      const scene = this.game.getScene();
+      const scene = this.game.scene;
       const lastFrameDur = scene.lastFrameDurMs;
       this.frameDuration -= lastFrameDur;
       
@@ -620,7 +398,7 @@ class Character extends Sprite {
   direction = "right";
 
   update() {
-    const scene = this.game.getScene();
+    const scene = this.game.scene;
     const lastFrameSeconds = scene.lastFrameDurSec;
 
     super.update();
@@ -655,6 +433,24 @@ class Character extends Sprite {
     this.direction = "down";
     this.velocity.y += this.speed;
     this.state = "is moving";
+  }
+}
+
+class Camera extends GameObject {
+  target = null;
+  
+  constructor(game, x, y, width, height) {
+    super(game, x, y, width, height);
+    
+  }
+  
+  update() {
+    super.update();
+    
+  }
+  
+  lookAt(gameObject) {
+    this.target = gameObject;
   }
 }
 
@@ -975,20 +771,16 @@ class Scene extends GameObject {
 class Game {
   fps = 0;
   scenes = [];
-  currentScene = null;
+  scene = null;
   onUpdate = null;
 
   start(sceneName) {
-    if (this.currentScene) {
-      this.currentScene.stop();
+    if (this.scene) {
+      this.scene.stop();
     }
 
-    this.currentScene = this.scenes[sceneName];
-    this.currentScene.start();
-  }
-
-  getScene() {
-    return this.currentScene;
+    this.scene = this.scenes[sceneName];
+    this.scene.start();
   }
 
   addScene(newScene) {
