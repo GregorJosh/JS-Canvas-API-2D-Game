@@ -24,8 +24,11 @@ window.onload = () => {
 
   game.onUpdate = () => {
     document.getElementById("fps").innerHTML = game.fps;
-    document.getElementById("mouse").innerHTML =
-      Input.mouse.x + ":" + Input.mouse.y;
+  };
+  
+  level1.onStart = () => {
+    level1.camera.lookAt(player);
+    level1.camera.attachTo(world);
   };
 
   level1.addCmdKeys(["Escape"], "back to menu");
