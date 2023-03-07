@@ -249,6 +249,7 @@ class GameObject {
       screenPosX,
       screenPosY
     );
+    this.context.rotate((this.transform.rotation * Math.PI) / 180);
   }
 }
 
