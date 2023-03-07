@@ -3,6 +3,7 @@ class Component {
 
   constructor(game) {
     this.game = game;
+    this.game.debugger.log(this.constructor.name + " component constructed.");
   }
 }
 
@@ -15,6 +16,11 @@ class Transform extends Component {
   scale = {
     x: 1,
     y: 1,
+  };
+
+  skew = {
+    v: 0,
+    h: 0,
   };
 
   rotation = 0;
@@ -46,8 +52,8 @@ class SpriteSheet extends Component {
           this.cols = this.image.width / tileWidth;
           this.rows = this.image.height / tileHeight;
         }
-      }
-      
+      };
+
       this.image.src = image;
     }
   }
@@ -101,9 +107,9 @@ class GameObject {
     this.height = height;
 
     this.id = this.constructor.name + GameObject.uid;
-    GameObject.uid++; 
-    
-    console.log(this.id);
+    GameObject.uid++;
+
+    this.game.debugger.log(this.id + " object constructed.");
   }
 
   addGameObject(gameObject) {
@@ -124,11 +130,7 @@ class GameObject {
     this.cmdCbMap.set(cmd, callback);
   }
 
-  update() {
-    if (this.onUpdate) {
-      this.onUpdate();
-    }
-
+  executeCommands() {
     for (const [keys, cmd] of this.keysCmdMap) {
       let areAllpressed = true;
 
@@ -137,9 +139,12 @@ class GameObject {
           areAllpressed = false;
         }
       }
-      
+
       if (areAllpressed) {
         this.cmdList.push(cmd);
+        this.game.debugger.log(
+          "Add '" + cmd + "' command for " + this.id + " object."
+        );
       }
     }
 
@@ -152,27 +157,17 @@ class GameObject {
     }
 
     this.cmdList = [];
+  }
 
-    if (this.position.x == "center") {
-      this.position.x = this.game.scene.canvas.width / 2;
-      this.position.x -= this.width / 2;
-    }
-
-    if (this.position.y == "middle") {
-      this.position.y = this.game.scene.canvas.height / 2;
-      this.position.y -= this.height / 2;
-    }
-
+  update() {
     this.transform.position.x = this.position.x;
     this.transform.position.y = this.position.y;
   }
-  
+
   draw(canvas) {
     if (!this.context) {
       this.context = canvas.getContext("2d");
     }
-    
-    
   }
 }
 
@@ -227,7 +222,7 @@ class AnimState extends Component {
       const scene = this.game.scene;
       const lastFrameDur = scene.lastFrameDurMs;
       this.frameDuration -= lastFrameDur;
-      
+
       if (this.frameDuration < 0) {
         this.frame++;
         this.frameDuration = this.duration / this.numOfFrames;
@@ -250,8 +245,8 @@ class Sprite extends GameObject {
 
   animStates = [];
 
-  constructor(game, x, y, width, height, atlas, tileWidth, tileHeight) {
-    super(game, x, y, width, height);
+  constructor(game, width, height, atlas, tileWidth, tileHeight) {
+    super(game, 0, 0, width, height);
 
     this.sheet = new SpriteSheet(game, atlas, tileWidth, tileHeight);
 
@@ -277,7 +272,7 @@ class Sprite extends GameObject {
 
   draw(canvas) {
     super.draw(canvas);
-    
+
     this.context.drawImage(
       this.sheet.image,
       this.sheet.tile.width * (this.animState.frame - 1),
@@ -289,7 +284,6 @@ class Sprite extends GameObject {
       this.width,
       this.height
     );
-    
   }
 }
 
@@ -327,15 +321,15 @@ class TileMap extends GameObject {
 
   draw(canvas) {
     super.draw(canvas);
-    
+
     for (let i = 0; i < this.map.length; ++i) {
       for (let j = 0; j < this.map[i].length; ++j) {
         const atlasPosX = (this.map[i][j].col - 1) * this.atlas.tile.width;
         const atlasPosY = (this.map[i][j].row - 1) * this.atlas.tile.height;
-    
+
         const tilePosX = j * this.atlas.tile.width;
         const tilePosY = i * this.atlas.tile.height;
-    
+
         this.context.drawImage(
           this.atlas.image,
           atlasPosX,
@@ -349,11 +343,21 @@ class TileMap extends GameObject {
         );
       }
     }
-    
-    const newScreenPosX = this.transform.position.x - this.game.scene.camera.position.x;
-    const newScreenPosY = this.transform.position.y - this.game.scene.camera.position.y;
-    
-    this.context.setTransform(1, 0, 0, 1, newScreenPosX, newScreenPosY);
+
+    const scene = this.game.scene;
+    const camPosX = scene.camera.position.x;
+    const camPosY = scene.camera.position.y;
+    const screenPosX = this.transform.position.x - camPosX;
+    const screenPosY = this.transform.position.y - camPosY;
+
+    this.context.setTransform(
+      this.transform.scale.x,
+      this.transform.skew.v,
+      this.transform.skew.h,
+      this.transform.scale.y,
+      screenPosX,
+      screenPosY
+    );
   }
 }
 
@@ -371,8 +375,15 @@ class Character extends Sprite {
   update() {
     const scene = this.game.scene;
     const lastFrameSeconds = scene.lastFrameDurSec;
-    
-    super.update();
+
+    let prevPosX = this.position.x;
+    let prevPoxY = this.position.y;
+
+    if (this.onUpdate) {
+      this.onUpdate();
+    }
+
+    super.executeCommands();
 
     this.position.x += this.velocity.x * lastFrameSeconds;
     this.position.y += this.velocity.y * lastFrameSeconds;
@@ -380,6 +391,19 @@ class Character extends Sprite {
     this.velocity.x = 0;
     this.velocity.y = 0;
     this.state = "is standing";
+
+    if (prevPosX != this.position.x || prevPoxY != this.position.y) {
+      this.game.debugger.log(
+        this.id +
+          " object new position is " +
+          Math.floor(this.position.x) +
+          ":" +
+          Math.floor(this.position.y) +
+          "."
+      );
+    }
+
+    super.update();
   }
 
   moveLeft() {
@@ -410,48 +434,49 @@ class Character extends Sprite {
 class Camera extends GameObject {
   target = null;
   world = null;
-  
+
   constructor(game, x, y, width, height) {
     super(game, x, y, width, height);
-    
   }
-  
+
   update() {
     if (this.target) {
-      this.position.x = this.target.position.x - this.width / 2 + this.target.width / 2;
-      this.position.y = this.target.position.y - this.height / 2 + this.target.height / 2;
+      this.position.x =
+        this.target.position.x - this.width / 2 + this.target.width / 2;
+      this.position.y =
+        this.target.position.y - this.height / 2 + this.target.height / 2;
     }
-    
+
     if (this.world) {
       if (this.position.x < this.world.position.x) {
         this.position.x = this.world.position.x;
       }
-      
+
       if (this.position.y < this.world.position.y) {
         this.position.y = this.world.position.y;
       }
-      
+
       const camRightEdge = this.position.x + this.width;
       const camBottomEdge = this.position.y + this.height;
       const worldRightEdge = this.world.position.x + this.world.width;
       const worldBottomEdge = this.world.position.y + this.world.height;
-      
+
       if (camRightEdge > worldRightEdge) {
         this.position.x = worldRightEdge - this.width;
       }
-      
+
       if (camBottomEdge > worldBottomEdge) {
         this.position.y = worldBottomEdge - this.height;
       }
     }
-    
+
     super.update();
   }
-  
+
   lookAt(target) {
     this.target = target;
   }
-  
+
   attachTo(world) {
     this.world = world;
   }
@@ -520,15 +545,15 @@ class Input {
       return false;
     }
   }
-  
+
   static setKey(key) {
     if (!this.keys) {
       this.keys = [];
     }
-    
+
     this.keys[key] = true;
   }
-  
+
   static unsetKey(key) {
     this.keys[key] = false;
   }
@@ -601,7 +626,7 @@ class Scene extends GameObject {
     let container = null;
 
     container = Scene.getElementBySceneName(this.name);
-    
+
     if (container) {
       container.height = height;
       container.width = width;
@@ -611,16 +636,16 @@ class Scene extends GameObject {
 
     if (this.type == "canvas") {
       const canvas = document.getElementById(this.canvasId);
-      
+
       if (Input.touchScreen) {
         canvas.height = height / 2;
         controlPanel = document.getElementById("control-panel");
       } else {
         canvas.height = height;
       }
-      
+
       canvas.width = width;
-      
+
       const camera = new Camera(this.game, 0, 0, canvas.width, canvas.height);
 
       this.canvas = canvas;
@@ -637,56 +662,56 @@ class Scene extends GameObject {
 
   start() {
     this.init();
-    
+
     if (this.container) {
       this.container.classList.remove("removed");
     }
-    
+
     if (this.controlPanel) {
       this.controlPanel.classList.remove("removed");
-      
+
       const btnUp = document.getElementById("btn-up");
       const btnDown = document.getElementById("btn-down");
       const btnLeft = document.getElementById("btn-left");
       const btnRight = document.getElementById("btn-right");
-      
+
       btnUp.ontouchstart = () => {
         Input.setKey("ArrowUp");
       };
-      
+
       btnUp.ontouchend = () => {
         Input.unsetKey("ArrowUp");
       };
-      
+
       btnDown.ontouchstart = () => {
         Input.setKey("ArrowDown");
       };
-      
+
       btnDown.ontouchend = () => {
         Input.unsetKey("ArrowDown");
       };
-      
+
       btnLeft.ontouchstart = () => {
         Input.setKey("ArrowLeft");
       };
-      
+
       btnLeft.ontouchend = () => {
         Input.unsetKey("ArrowLeft");
       };
-      
+
       btnRight.ontouchstart = () => {
         Input.setKey("ArrowRight");
       };
-      
+
       btnRight.ontouchend = () => {
         Input.unsetKey("ArrowRight");
       };
     }
-    
+
     if (this.canvas) {
       this.canvas.classList.remove("removed");
     }
-    
+
     if (this.onStart) {
       this.onStart();
     }
@@ -703,12 +728,12 @@ class Scene extends GameObject {
       this.container.classList.add("removed");
       this.container = null;
     }
-    
+
     if (this.controlPanel) {
       this.controlPanel.classList.add("removed");
       this.controlPanel = null;
     }
-    
+
     if (this.canvas) {
       this.context = null;
       this.canvas.classList.add("removed");
@@ -716,7 +741,7 @@ class Scene extends GameObject {
     }
 
     window.cancelAnimationFrame(this.animFrame);
-    
+
     this.state = "stopped";
   }
 
@@ -745,9 +770,9 @@ class Scene extends GameObject {
     if (this.game.onUpdate) {
       this.game.onUpdate();
     }
-    
+
     super.update();
-    
+
     if (this.camera) {
       this.camera.update();
     }
@@ -760,7 +785,7 @@ class Scene extends GameObject {
   draw() {
     if (this.canvas) {
       super.draw(this.canvas);
-      
+
       this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
       for (let i = 0; i < this.gameObjects.length; ++i) {
@@ -777,11 +802,35 @@ class Scene extends GameObject {
   }
 }
 
+class Debugger {
+  container = null;
+
+  constructor() {
+    this.container = document.getElementById("debugger");
+  }
+
+  log(msg) {
+    if (this.container) {
+      const p = document.createElement("p");
+
+      p.innerHTML = msg;
+      this.container.appendChild(p);
+      this.container.scrollTop = this.container.scrollHeight;
+    }
+  }
+}
+
 class Game {
   fps = 0;
   scenes = [];
   scene = null;
+  debugger = null;
   onUpdate = null;
+
+  constructor() {
+    this.debugger = new Debugger();
+    this.debugger.log("Game object constructed.");
+  }
 
   start(sceneName) {
     if (this.scene) {
