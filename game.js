@@ -13,8 +13,6 @@ window.onload = () => {
   );
   const player = new Character(
     game,
-    "center",
-    "middle",
     80,
     100,
     "images/skeleton_walk.png",
@@ -25,7 +23,7 @@ window.onload = () => {
   game.onUpdate = () => {
     document.getElementById("fps").innerHTML = game.fps;
   };
-  
+
   level1.onStart = () => {
     level1.camera.lookAt(player);
     level1.camera.attachTo(world);
@@ -75,7 +73,7 @@ window.onload = () => {
     if (player.state == "is standing") {
       player.setAnimState("look " + player.direction);
     }
-  }
+  };
 
   level1.addGameObject(world);
   level1.addGameObject(player);
