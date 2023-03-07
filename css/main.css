@@ -20,7 +20,7 @@ body {
   width: 100vw;
   height: 100vh;
   font-size: 1rem;
-  font-weight: 700;
+  font-weight: 500;
 }
 
 .canvas,
@@ -46,7 +46,7 @@ body {
 
 .game {
   z-index: 20;
-  pointer-events: none;
+  pointer-events: auto;
 }
 
 button {
@@ -66,13 +66,20 @@ button:hover {
   display: none;
 }
 
-.text-field {
+.game__text-field,
+.game__debug-window {
   width: 30%;
   margin: 20px;
   text-align: left;
   background-color: var(--color1);
   border: 1px solid var(--color2);
   z-index: 30;
+  opacity: .7;
+}
+
+.game__debug-window {
+  max-height: 50%;
+  overflow: auto;
 }
 
 #main-menu {
