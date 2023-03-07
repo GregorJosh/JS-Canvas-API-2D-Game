@@ -1,9 +1,19 @@
 class Component {
   game = null;
+  gameObject = null;
 
-  constructor(game) {
+  constructor(game, gameObject) {
     this.game = game;
-    this.game.debugger.log(this.constructor.name + " component constructed.");
+    this.gameObject = gameObject;
+
+    this.game.debugger.log(
+      this.constructor.name +
+        " component for " +
+        this.gameObject.constructor.name +
+        ": " +
+        this.gameObject.id +
+        " is constructed."
+    );
   }
 }
 
@@ -37,25 +47,22 @@ class SpriteSheet extends Component {
 
   image = null;
 
-  constructor(game, image, tileWidth, tileHeight) {
-    super(game);
+  constructor(game, gameObject, image, tileWidth, tileHeight) {
+    super(game, gameObject);
 
-    if (!this.image) {
-      this.image = new Image();
-      this.image.onload = () => {
-        if (tileWidth < 0 && tileHeight < 0) {
-          this.divByNum(tileWidth - 2 * tileWidth, tileHeight - 2 * tileHeight);
-        } else {
-          this.tile.width = tileWidth;
-          this.tile.height = tileHeight;
+    this.image = new Image();
+    this.image.onload = () => {
+      if (tileWidth < 0 && tileHeight < 0) {
+        this.divByNum(tileWidth - 2 * tileWidth, tileHeight - 2 * tileHeight);
+      } else {
+        this.tile.width = tileWidth;
+        this.tile.height = tileHeight;
 
-          this.cols = this.image.width / tileWidth;
-          this.rows = this.image.height / tileHeight;
-        }
-      };
-
-      this.image.src = image;
-    }
+        this.cols = this.image.width / tileWidth;
+        this.rows = this.image.height / tileHeight;
+      }
+    };
+    this.image.src = image;
   }
 
   divByNum(cols, rows) {
@@ -67,20 +74,88 @@ class SpriteSheet extends Component {
   }
 }
 
+class AnimState extends Component {
+  name = "idle";
+  duration = 2000;
+  sheetRow = 1;
+  numOfFrames = 0;
+  frameDuration = 0;
+  isPlaying = false;
+
+  currentFrame = {
+    id: 1,
+    duration: 0,
+  };
+
+  iteration = 0;
+  numOfIterations = 0;
+
+  constructor(game, gameObject, name, sheetRow, numOfFrames) {
+    super(game, gameObject);
+
+    this.name = name;
+    this.sheetRow = sheetRow;
+    this.numOfFrames = numOfFrames;
+  }
+
+  pause() {
+    this.isPlaying = false;
+  }
+
+  resume() {
+    this.isPlaying = true;
+    this.frameDuration = this.duration / this.numOfFrames;
+  }
+
+  rewind() {
+    this.currentFrame.id = 1;
+  }
+
+  stop() {
+    this.pause();
+    this.rewind();
+
+    this.currentFrame.duration = 0;
+  }
+
+  update() {
+    if (this.isPlaying && this.numOfFrames > 1) {
+      if (this.iteration > this.numOfIterations) {
+        this.stop();
+        this.iteration = 0;
+        return;
+      }
+
+      const scene = this.game.scene;
+      const sceneLastFrameDur = scene.lastFrameDurMs;
+      this.currentFrame.duration -= sceneLastFrameDur;
+
+      if (this.currentFrame.duration < 0) {
+        this.currentFrame.id++;
+        this.currentFrame.duration = this.frameDuration;
+
+        if (this.currentFrame.id > this.numOfFrames) {
+          this.rewind();
+          this.iteration++;
+        }
+      }
+    }
+  }
+}
+
 class GameObject {
-  position = {
+  localPos = {
     x: 0,
     y: 0,
   };
+
+  transform = null;
 
   width = 0;
   height = 0;
 
   game = null;
   context = null;
-
-  transform = null;
-  onUpdate = null;
 
   parent = null;
   gameObjects = [];
@@ -93,18 +168,19 @@ class GameObject {
   static uid = 0;
   id = 0;
 
+  onUpdate = null;
+
   constructor(game, x, y, width, height) {
-    this.transform = new Transform(game);
-    this.keysCmdMap = new Map();
-    this.cmdCbMap = new Map();
-
-    this.game = game;
-
-    this.position.x = x;
-    this.position.y = y;
+    this.transform = new Transform(game, this);
+    this.transform.position.x = x;
+    this.transform.position.y = y;
 
     this.width = width;
     this.height = height;
+
+    this.game = game;
+    this.keysCmdMap = new Map();
+    this.cmdCbMap = new Map();
 
     this.id = this.constructor.name + GameObject.uid;
     GameObject.uid++;
@@ -131,19 +207,11 @@ class GameObject {
   }
 
   executeCommands() {
-    for (const [keys, cmd] of this.keysCmdMap) {
-      let areAllpressed = true;
-
-      for (let i = 0; i < keys.length; i++) {
-        if (!Input.getKey(keys[i])) {
-          areAllpressed = false;
-        }
-      }
-
-      if (areAllpressed) {
-        this.cmdList.push(cmd);
+    for (const [keys, command] of this.keysCmdMap) {
+      if (Input.getKeys(keys)) {
+        this.cmdList.push(command);
         this.game.debugger.log(
-          "Add '" + cmd + "' command for " + this.id + " object."
+          "Add '" + command + "' command for " + this.id + " object."
         );
       }
     }
@@ -159,103 +227,59 @@ class GameObject {
     this.cmdList = [];
   }
 
-  update() {
-    this.transform.position.x = this.position.x;
-    this.transform.position.y = this.position.y;
-  }
+  update() {}
 
   draw(canvas) {
     if (!this.context) {
       this.context = canvas.getContext("2d");
     }
-  }
-}
 
-class AnimState extends Component {
-  name = "idle";
-  duration = 1500;
-  sheetRow = 1;
-  isPlaying = false;
+    const scene = this.game.scene;
+    const camPosX = scene.camera.transform.position.x;
+    const camPosY = scene.camera.transform.position.y;
+    const screenPosX = this.transform.position.x - camPosX;
+    const screenPosY = this.transform.position.y - camPosY;
 
-  frame = 1;
-  frameDuration = 0;
-  numOfFrames = 0;
-
-  iteration = 0;
-  numOfIterations = 0;
-
-  constructor(game, name, sheetRow, numOfFrames) {
-    super(game);
-
-    this.name = name;
-    this.sheetRow = sheetRow;
-    this.numOfFrames = numOfFrames;
-  }
-
-  pause() {
-    this.isPlaying = false;
-  }
-
-  resume() {
-    this.isPlaying = true;
-  }
-
-  rewind() {
-    this.frame = 1;
-  }
-
-  stop() {
-    this.pause();
-    this.rewind();
-
-    this.frameDuration = 0;
-  }
-
-  update() {
-    if (this.isPlaying && this.numOfFrames > 1) {
-      if (this.iteration > this.numOfIterations) {
-        this.stop();
-        this.iteration = 0;
-        return;
-      }
-
-      const scene = this.game.scene;
-      const lastFrameDur = scene.lastFrameDurMs;
-      this.frameDuration -= lastFrameDur;
-
-      if (this.frameDuration < 0) {
-        this.frame++;
-        this.frameDuration = this.duration / this.numOfFrames;
-
-        if (this.frame > this.numOfFrames) {
-          this.rewind();
-          this.iteration++;
-        }
-      }
-    }
+    this.context.save();
+    this.context.setTransform(
+      this.transform.scale.x,
+      this.transform.skew.v,
+      this.transform.skew.h,
+      this.transform.scale.y,
+      screenPosX,
+      screenPosY
+    );
   }
 }
 
 class Sprite extends GameObject {
+  animStates = [];
   animState = null;
   prevAnimState = null;
+
   sheet = null;
   defaultAnimState = "idle";
-  isPlaying = false;
 
-  animStates = [];
+  lastAnimStateFrameId = 0;
+  isPlaying = false;
 
   constructor(game, width, height, atlas, tileWidth, tileHeight) {
     super(game, 0, 0, width, height);
 
-    this.sheet = new SpriteSheet(game, atlas, tileWidth, tileHeight);
+    this.sheet = new SpriteSheet(game, this, atlas, tileWidth, tileHeight);
 
     this.addAnimState(this.defaultAnimState, 1, 1);
     this.setAnimState(this.defaultAnimState);
   }
 
   addAnimState(name, sheetRow, numOfFrames) {
-    const animState = new AnimState(this.game, name, sheetRow, numOfFrames);
+    const animState = new AnimState(
+      this.game,
+      this,
+      name,
+      sheetRow,
+      numOfFrames
+    );
 
     this.animStates[name] = animState;
   }
@@ -263,45 +287,130 @@ class Sprite extends GameObject {
   setAnimState(animState) {
     this.animState = this.animStates[animState];
     this.animState.resume();
+
+    this.isPlaying = true;
   }
 
   update() {
-    this.animState.update();
-    super.update();
+    if (this.isPlaying) {
+      this.lastAnimStateFrameId = this.animState.currentFrame.id;
+      this.animState.update();
+    }
   }
 
   draw(canvas) {
     super.draw(canvas);
 
+    const sheetPosX =
+      this.sheet.tile.width * (this.animState.currentFrame.id - 1);
+    const sheetPosY = this.sheet.tile.height * (this.animState.sheetRow - 1);
+
     this.context.drawImage(
       this.sheet.image,
-      this.sheet.tile.width * (this.animState.frame - 1),
-      this.sheet.tile.height * (this.animState.sheetRow - 1),
+      sheetPosX,
+      sheetPosY,
       this.sheet.tile.width,
       this.sheet.tile.height,
-      this.position.x,
-      this.position.y,
+      this.localPos.x,
+      this.localPos.y,
       this.width,
       this.height
     );
+    this.context.restore();
+  }
+}
+
+class Character extends Sprite {
+  velocity = {
+    x: 0,
+    y: 0,
+  };
+
+  speed = 60;
+  direction = "right";
+  state = "is standing";
+
+  update() {
+    const scene = this.game.scene;
+    const sceneLastFrameSeconds = scene.lastFrameDurSec;
+
+    let prevPosX = this.transform.position.x;
+    let prevPoxY = this.transform.position.y;
+
+    if (this.onUpdate) {
+      this.onUpdate();
+    }
+
+    super.executeCommands();
+
+    this.transform.position.x += this.velocity.x * sceneLastFrameSeconds;
+    this.transform.position.y += this.velocity.y * sceneLastFrameSeconds;
+
+    this.velocity.x = 0;
+    this.velocity.y = 0;
+    this.state = "is standing";
+
+    if (
+      prevPosX != this.transform.position.x ||
+      prevPoxY != this.transform.position.y
+    ) {
+      this.game.debugger.log(
+        this.id +
+          " object new position is " +
+          Math.floor(this.transform.position.x) +
+          ":" +
+          Math.floor(this.transform.position.y) +
+          "."
+      );
+    }
+
+    super.update();
+  }
+
+  moveLeft() {
+    this.direction = "left";
+    this.velocity.x -= this.speed;
+    this.state = "is moving";
+  }
+
+  moveRight() {
+    this.direction = "right";
+    this.velocity.x += this.speed;
+    this.state = "is moving";
+  }
+
+  moveUp() {
+    this.direction = "up";
+    this.velocity.y -= this.speed;
+    this.state = "is moving";
+  }
+
+  moveDown() {
+    this.direction = "down";
+    this.velocity.y += this.speed;
+    this.state = "is moving";
   }
 }
 
 class TileMap extends GameObject {
   atlas = null;
+
+  map = [];
   numOfCols = 0;
   numOfRows = 0;
   numOfTiles = 0;
-  map = [];
 
   constructor(game, cols, rows, atlas, tileWidth, tileHeight) {
-    super(game, 0, 0, tileWidth * cols, tileHeight * rows);
+    const width = tileWidth * cols;
+    const height = tileHeight * rows;
+
+    super(game, 0, 0, width, height);
 
     this.numOfCols = cols;
     this.numOfRows = rows;
     this.numOfTiles = cols * rows;
 
-    this.atlas = new SpriteSheet(game, atlas, tileWidth, tileHeight);
+    this.atlas = new SpriteSheet(this.game, this, atlas, tileWidth, tileHeight);
 
     for (let i = 0; i < this.numOfRows; ++i) {
       const row = [];
@@ -343,91 +452,7 @@ class TileMap extends GameObject {
         );
       }
     }
-
-    const scene = this.game.scene;
-    const camPosX = scene.camera.position.x;
-    const camPosY = scene.camera.position.y;
-    const screenPosX = this.transform.position.x - camPosX;
-    const screenPosY = this.transform.position.y - camPosY;
-
-    this.context.setTransform(
-      this.transform.scale.x,
-      this.transform.skew.v,
-      this.transform.skew.h,
-      this.transform.scale.y,
-      screenPosX,
-      screenPosY
-    );
-  }
-}
-
-class Character extends Sprite {
-  speed = 60;
-
-  velocity = {
-    x: 0,
-    y: 0,
-  };
-
-  state = "is standing";
-  direction = "right";
-
-  update() {
-    const scene = this.game.scene;
-    const lastFrameSeconds = scene.lastFrameDurSec;
-
-    let prevPosX = this.position.x;
-    let prevPoxY = this.position.y;
-
-    if (this.onUpdate) {
-      this.onUpdate();
-    }
-
-    super.executeCommands();
-
-    this.position.x += this.velocity.x * lastFrameSeconds;
-    this.position.y += this.velocity.y * lastFrameSeconds;
-
-    this.velocity.x = 0;
-    this.velocity.y = 0;
-    this.state = "is standing";
-
-    if (prevPosX != this.position.x || prevPoxY != this.position.y) {
-      this.game.debugger.log(
-        this.id +
-          " object new position is " +
-          Math.floor(this.position.x) +
-          ":" +
-          Math.floor(this.position.y) +
-          "."
-      );
-    }
-
-    super.update();
-  }
-
-  moveLeft() {
-    this.direction = "left";
-    this.velocity.x -= this.speed;
-    this.state = "is moving";
-  }
-
-  moveRight() {
-    this.direction = "right";
-    this.velocity.x += this.speed;
-    this.state = "is moving";
-  }
-
-  moveUp() {
-    this.direction = "up";
-    this.velocity.y -= this.speed;
-    this.state = "is moving";
-  }
-
-  moveDown() {
-    this.direction = "down";
-    this.velocity.y += this.speed;
-    this.state = "is moving";
+    this.context.restore();
   }
 }
 
@@ -441,32 +466,37 @@ class Camera extends GameObject {
 
   update() {
     if (this.target) {
-      this.position.x =
-        this.target.position.x - this.width / 2 + this.target.width / 2;
-      this.position.y =
-        this.target.position.y - this.height / 2 + this.target.height / 2;
+      this.transform.position.x =
+        this.target.transform.position.x -
+        this.width / 2 +
+        this.target.width / 2;
+      this.transform.position.y =
+        this.target.transform.position.y -
+        this.height / 2 +
+        this.target.height / 2;
     }
 
     if (this.world) {
-      if (this.position.x < this.world.position.x) {
-        this.position.x = this.world.position.x;
+      if (this.transform.position.x < this.world.transform.position.x) {
+        this.transform.position.x = this.world.transform.position.x;
       }
 
-      if (this.position.y < this.world.position.y) {
-        this.position.y = this.world.position.y;
+      if (this.transform.position.y < this.world.transform.position.y) {
+        this.transform.position.y = this.world.transform.position.y;
       }
 
-      const camRightEdge = this.position.x + this.width;
-      const camBottomEdge = this.position.y + this.height;
-      const worldRightEdge = this.world.position.x + this.world.width;
-      const worldBottomEdge = this.world.position.y + this.world.height;
+      const camRightEdge = this.transform.position.x + this.width;
+      const camBottomEdge = this.transform.position.y + this.height;
+      const worldRightEdge = this.world.transform.position.x + this.world.width;
+      const worldBottomEdge =
+        this.world.transform.position.y + this.world.height;
 
       if (camRightEdge > worldRightEdge) {
-        this.position.x = worldRightEdge - this.width;
+        this.transform.position.x = worldRightEdge - this.width;
       }
 
       if (camBottomEdge > worldBottomEdge) {
-        this.position.y = worldBottomEdge - this.height;
+        this.transform.position.y = worldBottomEdge - this.height;
       }
     }
 
@@ -544,6 +574,18 @@ class Input {
     } else {
       return false;
     }
+  }
+
+  static getKeys(keys) {
+    let areAllpressed = true;
+
+    for (let i = 0; i < keys.length; i++) {
+      if (!Input.getKey(keys[i])) {
+        areAllpressed = false;
+      }
+    }
+
+    return areAllpressed;
   }
 
   static setKey(key) {
@@ -791,6 +833,8 @@ class Scene extends GameObject {
       for (let i = 0; i < this.gameObjects.length; ++i) {
         this.gameObjects[i].draw(this.canvas);
       }
+
+      this.context.restore();
     }
   }
 
