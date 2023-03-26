@@ -1,73 +1,19 @@
 class Component {
   game = null;
+  gameObject = null;
 
-  constructor(game) {
+  constructor(game, gameObject) {
     this.game = game;
-  }
-}
+    this.gameObject = gameObject;
 
-class Anim extends Component {
-  sheetRowId = 1;
-  frame = 1;
-  numOfFrames = 0;
-  name = "idle";
-  isPlaying = false;
-  duration = 1000;
-  frameDuration = 0;
-  numOfIterations = 0;
-  iteration = 0;
-
-  constructor(game, name, sheetRowId, numOfFrames, speed = null) {
-    super(game);
-
-    this.name = name;
-    this.sheetRowId = sheetRowId;
-    this.numOfFrames = numOfFrames;
-
-    if (speed) {
-      this.speed = speed;
-    }
-  }
-
-  animate() {
-    if (this.isPlaying) {
-      this.frameDuration = this.duration / this.numOfFrames;
-      this.frame++;
-
-      if (this.frame > this.numOfFrames) {
-        this.rewind();
-        this.iteration++;
-      }
-
-      if (this.iteration > this.numOfIterations - 1) {
-        this.stop();
-        this.iteration = 0;
-      }
-    }
-  }
-
-  resume() {
-    this.isPlaying = true;
-  }
-
-  pause() {
-    this.isPlaying = false;
-  }
-
-  play(iterations) {
-    if (this.numOfFrames > 1) {
-      this.isPlaying = true;
-      this.numOfIterations = iterations;
-    }
-  }
-
-  rewind() {
-    this.frame = 1;
-  }
-
-  stop() {
-    this.pause();
-    this.rewind();
+    this.game.debugger.log(
+      this.constructor.name +
+        " component for " +
+        this.gameObject.constructor.name +
+        ": " +
+        this.gameObject.id +
+        " is constructed."
+    );
   }
 }
 
@@ -77,12 +23,37 @@ class Transform extends Component {
     y: 0,
   };
 
+  rect = {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  };
+
+  rotation = 0;
+
   scale = {
     x: 1,
     y: 1,
   };
 
-  rotation = 0;
+  skew = {
+    v: 0,
+    h: 0,
+  };
+
+  update() {
+    this.rect.top = this.position.y;
+    this.rect.left = this.position.x;
+    this.rect.right = this.position.x + this.gameObject.width * this.scale.x;
+    this.rect.bottom = this.position.y + this.gameObject.height * this.scale.y;
+  }
+}
+
+class Collider extends Component {
+  check() {
+    
+  }
 }
 
 class SpriteSheet extends Component {
@@ -96,25 +67,22 @@ class SpriteSheet extends Component {
 
   image = null;
 
-  constructor(game, image, tileWidth, tileHeight) {
-    super(game);
+  constructor(game, gameObject, image, tileWidth, tileHeight) {
+    super(game, gameObject);
 
-    if (!this.image) {
-      const t = this;
+    this.image = new Image();
+    this.image.onload = () => {
+      if (tileWidth < 0 && tileHeight < 0) {
+        this.divByNum(tileWidth - 2 * tileWidth, tileHeight - 2 * tileHeight);
+      } else {
+        this.tile.width = tileWidth;
+        this.tile.height = tileHeight;
 
-      this.image = new Img(game, 0, 0, 0, 0, image);
-      this.image.onLoad = function () {
-        if (tileWidth < 0 && tileHeight < 0) {
-          t.divByNum(tileWidth - 2 * tileWidth, tileHeight - 2 * tileHeight);
-        } else {
-          t.tile.width = tileWidth;
-          t.tile.height = tileHeight;
-
-          t.cols = t.image.width / tileWidth;
-          t.rows = t.image.height / tileHeight;
-        }
-      };
-    }
+        this.cols = this.image.width / tileWidth;
+        this.rows = this.image.height / tileHeight;
+      }
+    };
+    this.image.src = image;
   }
 
   divByNum(cols, rows) {
@@ -124,481 +92,640 @@ class SpriteSheet extends Component {
     this.cols = this.image.width / this.tile.width;
     this.rows = this.image.height / this.tile.height;
   }
+}
 
-  getImage() {
-    return this.image.img;
+class AnimState extends Component {
+  name = "idle";
+  duration = 2000;
+  sheetRow = 1;
+  numOfFrames = 0;
+  frameDuration = 0;
+  isPlaying = false;
+
+  currentFrame = {
+    id: 1,
+    duration: 0,
+  };
+
+  iteration = 0;
+  numOfIterations = 0;
+
+  constructor(game, gameObject, name, sheetRow, numOfFrames) {
+    super(game, gameObject);
+
+    this.name = name;
+    this.sheetRow = sheetRow;
+    this.numOfFrames = numOfFrames;
+  }
+
+  pause() {
+    this.isPlaying = false;
+  }
+
+  resume() {
+    this.isPlaying = true;
+    this.frameDuration = this.duration / this.numOfFrames;
+  }
+
+  rewind() {
+    this.currentFrame.id = 1;
+  }
+
+  stop() {
+    this.pause();
+    this.rewind();
+
+    this.currentFrame.duration = 0;
+  }
+
+  update() {
+    if (this.isPlaying && this.numOfFrames > 1) {
+      if (this.iteration > this.numOfIterations) {
+        this.stop();
+        this.iteration = 0;
+        return;
+      }
+
+      const scene = this.game.scene;
+      const sceneLastFrameDur = scene.lastFrameDurMs;
+      this.currentFrame.duration -= sceneLastFrameDur;
+
+      if (this.currentFrame.duration < 0) {
+        this.currentFrame.id++;
+        this.currentFrame.duration = this.frameDuration;
+
+        if (this.currentFrame.id > this.numOfFrames) {
+          this.rewind();
+          this.iteration++;
+        }
+      }
+    }
   }
 }
 
 class GameObject {
-  position = {
+  localPos = {
     x: 0,
     y: 0,
   };
+
+  transform = null;
 
   width = 0;
   height = 0;
 
   game = null;
-
-  transform = null;
-  onUpdate = null;
+  context = null;
 
   parent = null;
   gameObjects = [];
 
+  keysCmdMap = null;
+  cmdCbMap = null;
+  cmdList = [];
+  lastCommand = "";
+
   static uid = 0;
   id = 0;
 
+  onUpdate = null;
+
   constructor(game, x, y, width, height) {
-    this.transform = new Transform(game);
-
-    this.game = game;
-
-    this.position.x = x;
-    this.position.y = y;
+    this.transform = new Transform(game, this);
+    this.transform.position.x = x;
+    this.transform.position.y = y;
 
     this.width = width;
     this.height = height;
 
+    this.game = game;
+    this.keysCmdMap = new Map();
+    this.cmdCbMap = new Map();
+
     this.id = this.constructor.name + GameObject.uid;
-    GameObject.uid++; 
-    
-    console.log(this.id);
+    GameObject.uid++;
+
+    this.game.debugger.log(this.id + " object constructed.");
   }
 
   addGameObject(gameObject) {
     gameObject.parent = this;
+
     this.gameObjects.push(gameObject);
   }
 
-  update() {
-    if (this.onUpdate) {
-      this.onUpdate();
-    }
+  addCmdKeys(primKeys, cmd, secKeys = null) {
+    this.keysCmdMap.set(primKeys, cmd);
 
-    if (this.position.x == "center") {
-      this.position.x = this.game.getScene().canvas.width / 2;
-      this.position.x -= this.width / 2;
+    if (secKeys) {
+      this.keysCmdMap.set(secKeys, cmd);
     }
-
-    if (this.position.y == "middle") {
-      this.position.y = this.game.getScene().canvas.height / 2;
-      this.position.y -= this.height / 2;
-    }
-
-    this.transform.position.x = this.position.x;
-    this.transform.position.y = this.position.y;
   }
-}
 
-class Rectangle extends GameObject {
-  background = "black";
-  color = null;
-  gameObject = null;
+  onCommand(cmd, callback) {
+    this.cmdCbMap.set(cmd, callback);
+  }
 
-  constructor(
-    game,
-    x,
-    y,
-    width,
-    height,
-    bg = null,
-    color = null,
-    gameObject = null
-  ) {
-    super(game, x, y, width, height);
-
-    if (bg) {
-      this.background = bg;
+  executeCommands() {
+    for (const [keys, command] of this.keysCmdMap) {
+      if (Input.getKeys(keys)) {
+        this.cmdList.push(command);
+      }
     }
 
-    if (color) {
-      this.color = color;
+    for (let i = 0; i < this.cmdList.length; i++) {
+      this.lastCommand = this.cmdList[i];
+
+      const callback = this.cmdCbMap.get(this.lastCommand);
+
+      callback();
     }
 
-    if (gameObject) {
-      this.gameObject = gameObject;
-    }
+    this.cmdList = [];
   }
 
   update() {
-    super.update();
+    this.transform.update();
   }
 
-  draw(context) {
-    context.fillStyle = this.background;
-    context.fillRect(this.position.x, this.position.y, this.width, this.height);
-
-    if (this.color) {
-      context.strokeStyle = this.color;
-      context.strokeRect(
-        this.position.x,
-        this.position.y,
-        this.width,
-        this.height
-      );
-    }
-  }
-}
-
-class Label extends GameObject {
-  gameObject = null;
-  x = 0;
-  y = 0;
-  text = "Label";
-  align = "center";
-  baseline = "middle";
-  font = "serif";
-
-  constructor(game, x, y, gameObject = null) {
-    super(game, x, y, 0, 0);
-
-    if (gameObject) {
-      this.gameObject = gameObject;
+  draw(canvas) {
+    if (!this.context) {
+      this.context = canvas.getContext("2d");
     }
 
-    this.x = x;
-    this.y = y;
-  }
+    const scene = this.game.scene;
+    const camPosX = scene.camera.transform.position.x;
+    const camPosY = scene.camera.transform.position.y;
+    const screenPosX = this.transform.position.x - camPosX;
+    const screenPosY = this.transform.position.y - camPosY;
 
-  update() {
-    super.update();
-
-    switch (this.align) {
-      case "left":
-        this.x = this.gameObject.position.x;
-        break;
-      case "center":
-        this.x = this.gameObject.position.x + this.gameObject.width / 2;
-        break;
-      case "right":
-        this.x = this.gameObject.position.x + this.gameObject.width;
-    }
-
-    switch (this.baseline) {
-      case "top":
-        this.y = this.gameObject.position.y;
-        break;
-      case "middle":
-        this.y = this.gameObject.position.y + this.gameObject.height / 2;
-        break;
-      case "bottom":
-        this.y = this.gameObject.position.y + this.gameObject.height;
-    }
-  }
-
-  draw(context) {
-    context.font = this.gameObject.height + "px " + this.font;
-
-    context.textAlign = this.align;
-    context.textBaseline = this.baseline;
-
-    context.fillStyle = this.gameObject.color;
-    context.fillText(this.text, this.x, this.y, this.gameObject.width);
-  }
-}
-
-class Img extends GameObject {
-  img = null;
-  onLoad = null;
-
-  constructor(game, x, y, width, height, image) {
-    super(game, x, y, width, height);
-
-    if (!this.img) {
-      const t = this;
-
-      this.img = new Image();
-      this.img.onload = function () {
-        if (!t.width) {
-          t.width = this.width;
-        }
-
-        if (!t.height) {
-          t.height = this.height;
-        }
-
-        if (t.onLoad) {
-          t.onLoad();
-        }
-      };
-
-      this.img.src = image;
-    }
-  }
-
-  update() {
-    super.update();
-  }
-
-  draw(context) {
-    context.drawImage(
-      this.img,
-      this.position.x,
-      this.position.y,
-      this.width,
-      this.height
+    this.context.save();
+    this.context.setTransform(
+      this.transform.scale.x,
+      this.transform.skew.v,
+      this.transform.skew.h,
+      this.transform.scale.y,
+      screenPosX,
+      screenPosY
     );
-  }
-}
-
-class Button extends GameObject {
-  color = "white";
-  background = "black";
-  mouseOver = false;
-  onClick = null;
-  rectangle = null;
-  image = null;
-  label = null;
-
-  constructor(game, x, y, width, height, text, color = null, bg = null) {
-    super(game, x, y, width, height);
-
-    if (bg) {
-      this.background = bg;
-    }
-
-    if (color) {
-      this.color = color;
-    }
-
-    this.rectangle = new Rectangle(
-      game,
-      this.position.x,
-      this.position.y,
-      this.width,
-      this.height,
-      this.background,
-      this.color,
-      this
-    );
-
-    this.label = new Label(game, x, y, this);
-    this.label.text = text;
-
-    this.addGameObject(this.rectangle);
-    this.addGameObject(this.label);
-  }
-
-  update() {
-    super.update();
-
-    this.mouseOver = false;
-    this.rectangle.color = false;
-    this.game.getScene().canvas.style.cursor = "default";
-
-    if (
-      Input.mouse.x > this.position.x &&
-      Input.mouse.x < this.position.x + this.width &&
-      Input.mouse.y > this.position.y &&
-      Input.mouse.y < this.position.y + this.height
-    ) {
-      this.mouseOver = true;
-      this.rectangle.color = this.color;
-      this.game.getScene().canvas.style.cursor = "pointer";
-    }
-
-    if (Input.getButton("left") && this.mouseOver) {
-      this.onClick();
-    }
-
-    this.rectangle.update();
-    this.label.update();
-  }
-
-  draw(context) {
-    this.rectangle.draw(context);
-    this.label.draw(context);
-  }
-}
-
-class TextField extends GameObject {
-  background = "black";
-  color = "white";
-  onUpdate = null;
-  rectangle = null;
-  label = null;
-
-  constructor(game, x, y, width, height, color = null, bg = null) {
-    super(game, x, y, width, height);
-
-    if (bg) {
-      this.background = bg;
-    }
-
-    if (color) {
-      this.color = color;
-    }
-
-    this.rectangle = new Rectangle(
-      game,
-      this.position.x,
-      this.position.y,
-      this.width,
-      this.height,
-      this.background,
-      this.color,
-      this
-    );
-
-    this.label = new Label(game, x, y, this);
-  }
-
-  update() {
-    super.update();
-
-    this.rectangle.update();
-    this.label.update();
-  }
-
-  draw(context) {
-    this.rectangle.draw(context);
-    this.label.draw(context);
+    this.context.rotate((this.transform.rotation * Math.PI) / 180);
   }
 }
 
 class Sprite extends GameObject {
-  animation = null;
-  prevAnimation = null;
+  animStates = [];
+  animState = null;
+  prevAnimState = null;
+
   sheet = null;
+  defaultAnimState = "idle";
 
-  animations = [];
+  lastAnimStateFrameId = 0;
+  isPlaying = false;
 
-  constructor(game, x, y, width, height, atlas, tileWidth, tileHeight) {
-    super(game, x, y, width, height);
+  constructor(game, width, height, atlas, tileWidth, tileHeight) {
+    super(game, 0, 0, width, height);
 
-    this.sheet = new SpriteSheet(game, atlas, tileWidth, tileHeight);
+    this.sheet = new SpriteSheet(game, this, atlas, tileWidth, tileHeight);
 
-    this.addAnimation("idle", 1, 1);
-    this.animate("idle");
+    this.addAnimState(this.defaultAnimState, 1, 1);
+    this.setAnimState(this.defaultAnimState);
   }
 
-  addAnimation(name, sheetRowId, numOfFrames) {
-    const anim = new Anim(this.game, name, sheetRowId, numOfFrames);
+  addAnimState(name, sheetRow, numOfFrames) {
+    const animState = new AnimState(
+      this.game,
+      this,
+      name,
+      sheetRow,
+      numOfFrames
+    );
 
-    this.animations[name] = anim;
-    this.animation = anim;
+    this.animStates[name] = animState;
   }
 
-  animate(name) {
-    this.prevAnimation = this.animation;
-    this.animation = this.animations[name];
+  setAnimState(animState) {
+    this.animState = this.animStates[animState];
+    this.animState.resume();
 
-    this.animation.play(1);
+    this.isPlaying = true;
   }
 
   update() {
     super.update();
-    this.animation.animate();
+
+    if (this.isPlaying) {
+      this.lastAnimStateFrameId = this.animState.currentFrame.id;
+      this.animState.update();
+    }
   }
 
-  draw(context) {
-    context.drawImage(
-      this.sheet.getImage(),
-      this.sheet.tile.width * (this.animation.frame - 1),
-      this.sheet.tile.height * (this.animation.sheetRowId - 1),
+  draw(canvas) {
+    super.draw(canvas);
+
+    const sheetPosX =
+      this.sheet.tile.width * (this.animState.currentFrame.id - 1);
+    const sheetPosY = this.sheet.tile.height * (this.animState.sheetRow - 1);
+
+    this.context.drawImage(
+      this.sheet.image,
+      sheetPosX,
+      sheetPosY,
       this.sheet.tile.width,
       this.sheet.tile.height,
-      this.position.x,
-      this.position.y,
+      this.localPos.x,
+      this.localPos.y,
       this.width,
       this.height
     );
+    this.context.restore();
+  }
+}
+
+class Character extends Sprite {
+  velocity = {
+    x: 0,
+    y: 0,
+  };
+
+  speed = 60;
+  direction = "right";
+  state = "is standing";
+
+  update() {
+    const scene = this.game.scene;
+    const sceneLastFrameSeconds = scene.lastFrameDurSec;
+
+    let prevPosX = this.transform.position.x;
+    let prevPoxY = this.transform.position.y;
+
+    if (this.onUpdate) {
+      this.onUpdate();
+    }
+
+    super.executeCommands();
+
+    this.transform.position.x += this.velocity.x * sceneLastFrameSeconds;
+    this.transform.position.y += this.velocity.y * sceneLastFrameSeconds;
+
+    this.velocity.x = 0;
+    this.velocity.y = 0;
+    this.state = "is standing";
+
+    super.update();
+  }
+
+  moveLeft() {
+    this.direction = "left";
+    this.velocity.x -= this.speed;
+    this.state = "is moving";
+  }
+
+  moveRight() {
+    this.direction = "right";
+    this.velocity.x += this.speed;
+    this.state = "is moving";
+  }
+
+  moveUp() {
+    this.direction = "up";
+    this.velocity.y -= this.speed;
+    this.state = "is moving";
+  }
+
+  moveDown() {
+    this.direction = "down";
+    this.velocity.y += this.speed;
+    this.state = "is moving";
   }
 }
 
 class TileMap extends GameObject {
   atlas = null;
+
+  map = [];
   numOfCols = 0;
   numOfRows = 0;
-  numOfIslands = 0;
-  map = [];
+  numOfTiles = 0;
 
   constructor(game, cols, rows, atlas, tileWidth, tileHeight) {
-    super(game, 0, 0, tileWidth * cols, tileHeight * rows);
+    const width = tileWidth * cols;
+    const height = tileHeight * rows;
+
+    super(game, 0, 0, width, height);
 
     this.numOfCols = cols;
     this.numOfRows = rows;
-    this.numOfIslands = cols * rows;
+    this.numOfTiles = cols * rows;
 
-    this.atlas = new SpriteSheet(game, atlas, tileWidth, tileHeight);
+    this.atlas = new SpriteSheet(this.game, this, atlas, tileWidth, tileHeight);
 
     for (let i = 0; i < this.numOfRows; ++i) {
       const row = [];
 
       for (let j = 0; j < this.numOfCols; ++j) {
-        const island = {
+        const tile = {
           col: 2,
           row: 2,
         };
 
-        row.push(island);
+        row.push(tile);
       }
 
       this.map.push(row);
     }
   }
 
-  draw(context) {
+  draw(canvas) {
+    super.draw(canvas);
+
     for (let i = 0; i < this.map.length; ++i) {
       for (let j = 0; j < this.map[i].length; ++j) {
         const atlasPosX = (this.map[i][j].col - 1) * this.atlas.tile.width;
         const atlasPosY = (this.map[i][j].row - 1) * this.atlas.tile.height;
 
-        const screenPosX = this.position.x + j * this.atlas.tile.width;
-        const screenPosY = this.position.y + i * this.atlas.tile.height;
+        const tilePosX = j * this.atlas.tile.width;
+        const tilePosY = i * this.atlas.tile.height;
 
-        context.drawImage(
-          this.atlas.getImage(),
+        this.context.drawImage(
+          this.atlas.image,
           atlasPosX,
           atlasPosY,
           this.atlas.tile.width,
           this.atlas.tile.height,
-          screenPosX,
-          screenPosY,
+          tilePosX,
+          tilePosY,
           this.atlas.tile.width,
           this.atlas.tile.height
         );
       }
     }
+    this.context.restore();
   }
 }
 
-class Character extends Sprite {
-  speed = 60;
+class Camera extends GameObject {
+  target = null;
+  world = null;
 
-  velocity = {
-    x: 0,
-    y: 0,
-  };
+  constructor(game, x, y, width, height) {
+    super(game, x, y, width, height);
+  }
 
   update() {
-    const lastFrameSeconds = this.game.getScene().lastFrameDurSec;
+    if (this.target) {
+      this.transform.position.x =
+        this.target.transform.position.x -
+        this.width / 2 +
+        this.target.width / 2;
+      this.transform.position.y =
+        this.target.transform.position.y -
+        this.height / 2 +
+        this.target.height / 2;
+    }
+
+    if (this.world) {
+      if (this.transform.position.x < this.world.transform.position.x) {
+        this.transform.position.x = this.world.transform.position.x;
+      }
+
+      if (this.transform.position.y < this.world.transform.position.y) {
+        this.transform.position.y = this.world.transform.position.y;
+      }
+
+      const camRightEdge = this.transform.position.x + this.width;
+      const camBottomEdge = this.transform.position.y + this.height;
+      const worldRightEdge = this.world.transform.position.x + this.world.width;
+      const worldBottomEdge =
+        this.world.transform.position.y + this.world.height;
+
+      if (camRightEdge > worldRightEdge) {
+        this.transform.position.x = worldRightEdge - this.width;
+      }
+
+      if (camBottomEdge > worldBottomEdge) {
+        this.transform.position.y = worldBottomEdge - this.height;
+      }
+    }
 
     super.update();
-
-    this.position.x += this.velocity.x * lastFrameSeconds;
-    this.position.y += this.velocity.y * lastFrameSeconds;
-
-    this.velocity.x = 0;
-    this.velocity.y = 0;
   }
 
-  moveLeft() {
-    this.velocity.x -= this.speed;
+  lookAt(target) {
+    this.target = target;
   }
 
-  moveRight() {
-    this.velocity.x += this.speed;
+  attachTo(world) {
+    this.world = world;
+  }
+}
+
+class Scene extends GameObject {
+  name = "Scene Name";
+  type = "canvas";
+  canvasId = "main-canvas";
+  canvas = null;
+  camera = null;
+  onStart = null;
+  animFrame = false;
+  prevTimeStamp = 0;
+  lastFrameDurMs = 0;
+  lastFrameDurSec = 0;
+  container = null;
+  controlPanel = null;
+  state = "stopped";
+
+  constructor(game, name = "", type = "") {
+    super(game, 0, 0, 0, 0);
+
+    if (name) {
+      this.name = name;
+    }
+
+    if (type) {
+      this.type = type;
+    }
   }
 
-  moveUp() {
-    this.velocity.y -= this.speed;
+  init() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    let controlPanel = null;
+    let container = null;
+
+    container = Scene.getElementBySceneName(this.name);
+
+    if (container) {
+      container.height = height;
+      container.width = width;
+
+      this.container = container;
+    }
+
+    if (this.type == "canvas") {
+      const canvas = document.getElementById(this.canvasId);
+
+      if (Input.touchScreen) {
+        canvas.height = height / 2;
+        controlPanel = document.getElementById("control-panel");
+      } else {
+        canvas.height = height;
+      }
+
+      canvas.width = width;
+
+      const camera = new Camera(this.game, 0, 0, canvas.width, canvas.height);
+
+      this.canvas = canvas;
+      this.camera = camera;
+    }
+
+    this.width = width;
+    this.height = height;
+
+    if (controlPanel) {
+      this.controlPanel = controlPanel;
+    }
   }
 
-  moveDown() {
-    this.velocity.y += this.speed;
+  start() {
+    this.init();
+
+    if (this.container) {
+      this.container.classList.remove("removed");
+    }
+
+    if (this.controlPanel) {
+      this.controlPanel.classList.remove("removed");
+
+      const btnUp = document.getElementById("btn-up");
+      const btnDown = document.getElementById("btn-down");
+      const btnLeft = document.getElementById("btn-left");
+      const btnRight = document.getElementById("btn-right");
+
+      btnUp.ontouchstart = () => {
+        Input.setKey("ArrowUp");
+      };
+
+      btnUp.ontouchend = () => {
+        Input.unsetKey("ArrowUp");
+      };
+
+      btnDown.ontouchstart = () => {
+        Input.setKey("ArrowDown");
+      };
+
+      btnDown.ontouchend = () => {
+        Input.unsetKey("ArrowDown");
+      };
+
+      btnLeft.ontouchstart = () => {
+        Input.setKey("ArrowLeft");
+      };
+
+      btnLeft.ontouchend = () => {
+        Input.unsetKey("ArrowLeft");
+      };
+
+      btnRight.ontouchstart = () => {
+        Input.setKey("ArrowRight");
+      };
+
+      btnRight.ontouchend = () => {
+        Input.unsetKey("ArrowRight");
+      };
+    }
+
+    if (this.canvas) {
+      this.canvas.classList.remove("removed");
+    }
+
+    if (this.onStart) {
+      this.onStart();
+    }
+
+    this.animFrame = window.requestAnimationFrame((timeStamp) =>
+      this.nextFrame(timeStamp)
+    );
+
+    this.state = "playing";
+  }
+
+  stop() {
+    if (this.container) {
+      this.container.classList.add("removed");
+      this.container = null;
+    }
+
+    if (this.controlPanel) {
+      this.controlPanel.classList.add("removed");
+      this.controlPanel = null;
+    }
+
+    if (this.canvas) {
+      this.context = null;
+      this.canvas.classList.add("removed");
+      this.canvas = null;
+    }
+
+    window.cancelAnimationFrame(this.animFrame);
+
+    this.state = "stopped";
+  }
+
+  nextFrame(timeStamp) {
+    this.lastFrameDurMs = timeStamp - this.prevTimeStamp;
+    this.lastFrameDurSec = this.lastFrameDurMs / 1000;
+
+    const fps = 1 / this.lastFrameDurSec;
+
+    this.prevTimeStamp = timeStamp;
+    this.game.fps = Math.round(fps);
+
+    this.update();
+    this.draw();
+
+    if (this.state == "playing") {
+      this.animFrame = window.requestAnimationFrame((timeStamp) =>
+        this.nextFrame(timeStamp)
+      );
+    } else if (this.state == "stopped") {
+      this.animFrame = false;
+    }
+  }
+
+  update() {
+    this.game.update();
+    super.update();
+
+    if (this.camera) {
+      this.camera.update();
+    }
+
+    for (let i = 0; i < this.gameObjects.length; ++i) {
+      this.gameObjects[i].update();
+    }
+  }
+
+  draw() {
+    if (this.canvas) {
+      super.draw(this.canvas);
+
+      this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      for (let i = 0; i < this.gameObjects.length; ++i) {
+        this.gameObjects[i].draw(this.canvas);
+      }
+
+      this.context.restore();
+    }
+  }
+
+  static getElementBySceneName(sceneName) {
+    const id = sceneName.replace(/ /i, "-").toLowerCase();
+    const element = document.getElementById(id);
+
+    return element;
   }
 }
 
@@ -665,15 +792,27 @@ class Input {
       return false;
     }
   }
-  
+
+  static getKeys(keys) {
+    let areAllpressed = true;
+
+    for (let i = 0; i < keys.length; i++) {
+      if (!Input.getKey(keys[i])) {
+        areAllpressed = false;
+      }
+    }
+
+    return areAllpressed;
+  }
+
   static setKey(key) {
     if (!this.keys) {
       this.keys = [];
     }
-    
+
     this.keys[key] = true;
   }
-  
+
   static unsetKey(key) {
     this.keys[key] = false;
   }
@@ -712,182 +851,69 @@ class Input {
   }
 }
 
-class Scene extends GameObject {
-  name = "Scene Name";
+class Debugger {
   game = null;
-  type = "canvas";
-  canvas = null;
-  context = null;
-  animFrame = false;
-  prevTimeStamp = 0;
-  lastFrameDurMs = 0;
-  lastFrameDurSec = 0;
   container = null;
-  controlPanel = null;
-  state = "stopped";
+  output = null;
+  watcher = null;
+  watched = [];
 
-  constructor(game, name = "", type = "") {
-    const width = window.innerWidth;
+  constructor(game) {
+    this.game = game;
+    this.container = document.getElementById("debugger-container");
+    this.output = document.getElementById("debugger-output");
+    this.watcher = document.getElementById("debugger-watcher");
+  }
 
-    let height = 0;
-    let controlPanel = null;
+  log(msg) {
+    if (this.output) {
+      const p = document.createElement("p");
 
-    if (Input.touchScreen) {
-      height = window.innerHeight / 2;
-      controlPanel = document.getElementById("control-panel");
-    } else {
-      height = window.innerHeight;
-    }
-
-    super(game, 0, 0, width, height);
-
-    if (name) {
-      this.name = name;
-    }
-
-    if (type) {
-      this.type = type;
-    }
-    
-    if (controlPanel) {
-      this.controlPanel = controlPanel;
+      p.innerHTML = msg;
+      this.output.appendChild(p);
+      this.output.scrollTop = this.output.scrollHeight;
     }
   }
 
-  init() {
-    if (this.type == "canvas") {
-      const canvas = document.createElement("canvas");
+  watch(gameObject) {
+    if (this.watcher) {
+      const li = document.createElement("li");
+      const watched = {
+        object: gameObject,
+        element: li,
+      };
 
-      canvas.width = this.width;
-      canvas.height = this.height;
+      li.id = gameObject.id;
+      li.classList.add("debug-window__watched");
 
-      this.context = canvas.getContext("2d");
-      this.canvas = canvas;
-    } else if (this.type == "html") {
-      const id = this.name.replace(/ /i, "-").toLowerCase();
-      const container = document.getElementById(id);
-
-      this.container = container;
-    }
-  }
-
-  start() {
-    this.init();
-
-    if (this.canvas) {
-      document.body.insertBefore(this.canvas, document.body.childNodes[0]);
-    } else if (this.container) {
-      this.container.classList.remove("removed");
-    }
-    
-    if (this.controlPanel) {
-      this.controlPanel.classList.remove("removed");
-    }
-
-    this.animFrame = window.requestAnimationFrame((timeStamp) =>
-      this.nextFrame(timeStamp)
-    );
-
-    this.state = "playing";
-  }
-
-  stop() {
-    if (this.canvas) {
-      this.context = null;
-      this.canvas.remove();
-      this.canvas = null;
-    } else if (this.container) {
-      this.container.classList.add("removed");
-      this.container = null;
-    } 
-    
-    if (this.controlPanel) {
-      this.controlPanel.classList.add("removed");
-    }
-
-    window.cancelAnimationFrame(this.animFrame);
-    this.state = "stopped";
-  }
-
-  nextFrame(timeStamp) {
-    this.lastFrameDurMs = timeStamp - this.prevTimeStamp;
-    this.lastFrameDurSec = this.lastFrameDurMs / 1000;
-
-    const fps = 1 / this.lastFrameDurSec;
-
-    this.prevTimeStamp = timeStamp;
-    this.game.fps = Math.round(fps);
-
-    this.update();
-    this.draw();
-
-    if (this.state == "playing") {
-      this.animFrame = window.requestAnimationFrame((timeStamp) =>
-        this.nextFrame(timeStamp)
-      );
-    } else if (this.state == "stopped") {
-      this.animFrame = false;
+      this.watched.push(watched);
+      this.watcher.appendChild(li);
     }
   }
 
   update() {
-    if (this.controlPanel) {
-      const btnUp = document.getElementById("btn-up");
-      const btnDown = document.getElementById("btn-down");
-      const btnLeft = document.getElementById("btn-left");
-      const btnRight = document.getElementById("btn-right");
+    for (const id in this.watched) {
+      const o = this.watched[id].object;
+      const innerHTML =
+        o.id +
+        " position: " +
+        Math.floor(o.transform.position.x) +
+        ":" +
+        Math.floor(o.transform.position.y) +
+        " width: " +
+        o.width +
+        " height: " +
+        o.height +
+        " left: " +
+        Math.floor(o.transform.rect.left) +
+        " right: " +
+        Math.floor(o.transform.rect.right) +
+        " top: " +
+        Math.floor(o.transform.rect.top) +
+        " bottom: " +
+        Math.floor(o.transform.rect.bottom);
 
-      btnUp.ontouchstart = () => {
-        Input.setKey("ArrowUp");
-      };
-      
-      btnUp.ontouchend = () => {
-        Input.unsetKey("ArrowUp");
-      };
-      
-      btnDown.ontouchstart = () => {
-        Input.setKey("ArrowDown");
-      };
-      
-      btnDown.ontouchend = () => {
-        Input.unsetKey("ArrowDown");
-      };
-      
-      btnLeft.ontouchstart = () => {
-        Input.setKey("ArrowLeft");
-      };
-      
-      btnLeft.ontouchend = () => {
-        Input.unsetKey("ArrowLeft");
-      }; 
-      
-      btnRight.ontouchstart = () => {
-        Input.setKey("ArrowRight");
-      };
-      
-      btnRight.ontouchend = () => {
-        Input.unsetKey("ArrowRight");
-      };
-    }
-    
-    super.update();
-
-    for (let i = 0; i < this.gameObjects.length; ++i) {
-      this.gameObjects[i].update();
-    }
-  }
-
-  clear() {
-    this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
-  }
-
-  draw() {
-    if (this.context) {
-      this.clear();
-
-      for (let i = 0; i < this.gameObjects.length; ++i) {
-        this.gameObjects[i].draw(this.context);
-      }
+      this.watched[id].element.innerHTML = innerHTML;
     }
   }
 }
@@ -895,19 +921,30 @@ class Scene extends GameObject {
 class Game {
   fps = 0;
   scenes = [];
-  currentScene = null;
+  scene = null;
+  debugger = null;
+  onUpdate = null;
 
-  start(sceneName) {
-    if (this.currentScene) {
-      this.currentScene.stop();
-    }
-
-    this.currentScene = this.scenes[sceneName];
-    this.currentScene.start();
+  constructor() {
+    this.debugger = new Debugger(this);
+    this.debugger.log("Game object constructed.");
   }
 
-  getScene() {
-    return this.currentScene;
+  start(sceneName) {
+    if (this.scene) {
+      this.scene.stop();
+    }
+
+    this.scene = this.scenes[sceneName];
+    this.scene.start();
+  }
+
+  update() {
+    if (this.onUpdate) {
+      this.onUpdate();
+    }
+
+    this.debugger.update();
   }
 
   addScene(newScene) {

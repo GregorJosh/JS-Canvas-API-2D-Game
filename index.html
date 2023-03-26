@@ -9,24 +9,31 @@
 
     <link rel="preload" href="images/skeleton_walk.png" as="image" />
     <link rel="preload" href="images/terrain_and_objects.png" as="image" />
-    
+
     <link rel="stylesheet" href="css/main.css" />
-    
+
     <script src="engine.js"></script>
     <script src="game.js"></script>
   </head>
   <body>
-    <div id="main-menu" class="removed scene">
-      <p>FPS: <span id="fps"></span></p>
-      <p>Mouse: <span id="mouse"></span></p>
-      <button id="start-game" type="button">Start Game</button>
+    <div class="debug-window" id="debugger-container">
+      <h4 class="debug-window__heading">Debug Window: FPS: <span id="fps"></span></h4>
+      <div class="debug-window__output" id="debugger-output"></div>
+      <div class="debug-window__watcher" id="debugger-watcher"></div>
     </div>
-    <div id="control-panel" class="removed control-panel">
-      <button id="btn-up" type="button">&uarr;</button>
-      <div class="row">
-        <button id="btn-left" type="button">&larr;</button>
-        <button id="btn-down" type="button">&darr;</button>
-        <button id="btn-right" type="button">&rarr;</button>
+    <canvas id="main-canvas" class="removed canvas"></canvas>
+    <div id="main-menu" class="removed scene">
+      <button id="start-game" class="scene__button" type="button">Start Game</button>
+    </div>
+    <div id="level-1" class="removed scene">
+      <button id="quit-game" type="button">Back to menu</button>
+      <div id="control-panel" class="removed control-panel">
+        <button id="btn-up" type="button">&uarr;</button>
+        <div class="row">
+          <button id="btn-left" type="button">&larr;</button>
+          <button id="btn-down" type="button">&darr;</button>
+          <button id="btn-right" type="button">&rarr;</button>
+        </div>
       </div>
     </div>
   </body>
