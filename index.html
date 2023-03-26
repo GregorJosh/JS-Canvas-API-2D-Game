@@ -16,9 +16,10 @@
     <script src="game.js"></script>
   </head>
   <body>
-    <div class="game">
-      <p class="game__text-field">FPS: <span id="fps"></span></p>
-      <div id="debugger" class="game__debug-window"></div>
+    <div class="debug-window" id="debugger-container">
+      <h4 class="debug-window__heading">Debug Window: FPS: <span id="fps"></span></h4>
+      <div class="debug-window__output" id="debugger-output"></div>
+      <div class="debug-window__watcher" id="debugger-watcher"></div>
     </div>
     <canvas id="main-canvas" class="removed canvas"></canvas>
     <div id="main-menu" class="removed scene">

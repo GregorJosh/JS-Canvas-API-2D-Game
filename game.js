@@ -78,6 +78,9 @@ window.onload = () => {
   level1.addGameObject(world);
   level1.addGameObject(player);
 
+  game.debugger.watch(world);
+  game.debugger.watch(player);
+
   game.addScene(menu);
   game.addScene(level1);
   game.start("Main Menu");

@@ -23,6 +23,15 @@ class Transform extends Component {
     y: 0,
   };
 
+  rect = {
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  };
+
+  rotation = 0;
+
   scale = {
     x: 1,
     y: 1,
@@ -33,7 +42,18 @@ class Transform extends Component {
     h: 0,
   };
 
-  rotation = 0;
+  update() {
+    this.rect.top = this.position.y;
+    this.rect.left = this.position.x;
+    this.rect.right = this.position.x + this.gameObject.width * this.scale.x;
+    this.rect.bottom = this.position.y + this.gameObject.height * this.scale.y;
+  }
+}
+
+class Collider extends Component {
+  check() {
+    
+  }
 }
 
 class SpriteSheet extends Component {
@@ -210,9 +230,6 @@ class GameObject {
     for (const [keys, command] of this.keysCmdMap) {
       if (Input.getKeys(keys)) {
         this.cmdList.push(command);
-        this.game.debugger.log(
-          "Add '" + command + "' command for " + this.id + " object."
-        );
       }
     }
 
@@ -227,7 +244,9 @@ class GameObject {
     this.cmdList = [];
   }
 
-  update() {}
+  update() {
+    this.transform.update();
+  }
 
   draw(canvas) {
     if (!this.context) {
@@ -293,6 +312,8 @@ class Sprite extends GameObject {
   }
 
   update() {
+    super.update();
+
     if (this.isPlaying) {
       this.lastAnimStateFrameId = this.animState.currentFrame.id;
       this.animState.update();
@@ -350,20 +371,6 @@ class Character extends Sprite {
     this.velocity.x = 0;
     this.velocity.y = 0;
     this.state = "is standing";
-
-    if (
-      prevPosX != this.transform.position.x ||
-      prevPoxY != this.transform.position.y
-    ) {
-      this.game.debugger.log(
-        this.id +
-          " object new position is " +
-          Math.floor(this.transform.position.x) +
-          ":" +
-          Math.floor(this.transform.position.y) +
-          "."
-      );
-    }
 
     super.update();
   }
@@ -513,128 +520,6 @@ class Camera extends GameObject {
   }
 }
 
-class Input {
-  static keys = false;
-  static buttons = false;
-  static touchScreen = false;
-
-  static mouse = {
-    x: 0,
-    y: 0,
-  };
-
-  static {
-    if ("ontouchstart" in window) {
-      this.touchScreen = true;
-
-      window.ontouchstart = (event) => {
-        const x = Math.floor(event.touches[0].clientX);
-        const y = Math.floor(event.touches[0].clientY);
-
-        if (!this.buttons) {
-          this.buttons = [];
-        }
-
-        this.buttons["left"] = true;
-        this.setMouseCoord(x, y);
-      };
-
-      window.ontouchend = (event) => {
-        this.buttons["left"] = false;
-      };
-    }
-
-    window.onkeydown = (event) => {
-      this.setKey(event.key);
-    };
-
-    window.onkeyup = (event) => {
-      this.unsetKey(event.key);
-    };
-
-    window.onmousedown = (event) => {
-      if (!this.buttons) {
-        this.buttons = [];
-      }
-
-      this.buttons[this.getButtonName(event.button)] = true;
-    };
-
-    window.onmouseup = (event) => {
-      this.buttons[this.getButtonName(event.button)] = false;
-    };
-
-    window.onmousemove = (event) => {
-      this.setMouseCoord(event.x, event.y);
-    };
-  }
-
-  static getKey(key) {
-    if (this.keys && this.keys[key]) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static getKeys(keys) {
-    let areAllpressed = true;
-
-    for (let i = 0; i < keys.length; i++) {
-      if (!Input.getKey(keys[i])) {
-        areAllpressed = false;
-      }
-    }
-
-    return areAllpressed;
-  }
-
-  static setKey(key) {
-    if (!this.keys) {
-      this.keys = [];
-    }
-
-    this.keys[key] = true;
-  }
-
-  static unsetKey(key) {
-    this.keys[key] = false;
-  }
-
-  static getButton(button) {
-    if (this.buttons && this.buttons[button]) {
-      return true;
-    } else {
-      return false;
-    }
-  }
-
-  static getButtonName(button) {
-    let name;
-
-    switch (button) {
-      case 0:
-        name = "left";
-        break;
-      case 1:
-        name = "middle";
-        break;
-      case 2:
-        name = "right";
-        break;
-      default:
-        name = "left";
-    }
-
-    return name;
-  }
-
-  static setMouseCoord(x, y) {
-    this.mouse.x = x;
-    this.mouse.y = y;
-  }
-}
-
 class Scene extends GameObject {
   name = "Scene Name";
   type = "canvas";
@@ -663,8 +548,8 @@ class Scene extends GameObject {
   }
 
   init() {
-    let width = window.innerWidth;
-    let height = window.innerHeight;
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     let controlPanel = null;
     let container = null;
 
@@ -810,10 +695,7 @@ class Scene extends GameObject {
   }
 
   update() {
-    if (this.game.onUpdate) {
-      this.game.onUpdate();
-    }
-
+    this.game.update();
     super.update();
 
     if (this.camera) {
@@ -847,20 +729,191 @@ class Scene extends GameObject {
   }
 }
 
-class Debugger {
-  container = null;
+class Input {
+  static keys = false;
+  static buttons = false;
+  static touchScreen = false;
 
-  constructor() {
-    this.container = document.getElementById("debugger");
+  static mouse = {
+    x: 0,
+    y: 0,
+  };
+
+  static {
+    if ("ontouchstart" in window) {
+      this.touchScreen = true;
+
+      window.ontouchstart = (event) => {
+        const x = Math.floor(event.touches[0].clientX);
+        const y = Math.floor(event.touches[0].clientY);
+
+        if (!this.buttons) {
+          this.buttons = [];
+        }
+
+        this.buttons["left"] = true;
+        this.setMouseCoord(x, y);
+      };
+
+      window.ontouchend = (event) => {
+        this.buttons["left"] = false;
+      };
+    }
+
+    window.onkeydown = (event) => {
+      this.setKey(event.key);
+    };
+
+    window.onkeyup = (event) => {
+      this.unsetKey(event.key);
+    };
+
+    window.onmousedown = (event) => {
+      if (!this.buttons) {
+        this.buttons = [];
+      }
+
+      this.buttons[this.getButtonName(event.button)] = true;
+    };
+
+    window.onmouseup = (event) => {
+      this.buttons[this.getButtonName(event.button)] = false;
+    };
+
+    window.onmousemove = (event) => {
+      this.setMouseCoord(event.x, event.y);
+    };
+  }
+
+  static getKey(key) {
+    if (this.keys && this.keys[key]) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  static getKeys(keys) {
+    let areAllpressed = true;
+
+    for (let i = 0; i < keys.length; i++) {
+      if (!Input.getKey(keys[i])) {
+        areAllpressed = false;
+      }
+    }
+
+    return areAllpressed;
+  }
+
+  static setKey(key) {
+    if (!this.keys) {
+      this.keys = [];
+    }
+
+    this.keys[key] = true;
+  }
+
+  static unsetKey(key) {
+    this.keys[key] = false;
+  }
+
+  static getButton(button) {
+    if (this.buttons && this.buttons[button]) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  static getButtonName(button) {
+    let name;
+
+    switch (button) {
+      case 0:
+        name = "left";
+        break;
+      case 1:
+        name = "middle";
+        break;
+      case 2:
+        name = "right";
+        break;
+      default:
+        name = "left";
+    }
+
+    return name;
+  }
+
+  static setMouseCoord(x, y) {
+    this.mouse.x = x;
+    this.mouse.y = y;
+  }
+}
+
+class Debugger {
+  game = null;
+  container = null;
+  output = null;
+  watcher = null;
+  watched = [];
+
+  constructor(game) {
+    this.game = game;
+    this.container = document.getElementById("debugger-container");
+    this.output = document.getElementById("debugger-output");
+    this.watcher = document.getElementById("debugger-watcher");
   }
 
   log(msg) {
-    if (this.container) {
+    if (this.output) {
       const p = document.createElement("p");
 
       p.innerHTML = msg;
-      this.container.appendChild(p);
-      this.container.scrollTop = this.container.scrollHeight;
+      this.output.appendChild(p);
+      this.output.scrollTop = this.output.scrollHeight;
+    }
+  }
+
+  watch(gameObject) {
+    if (this.watcher) {
+      const li = document.createElement("li");
+      const watched = {
+        object: gameObject,
+        element: li,
+      };
+
+      li.id = gameObject.id;
+      li.classList.add("debug-window__watched");
+
+      this.watched.push(watched);
+      this.watcher.appendChild(li);
+    }
+  }
+
+  update() {
+    for (const id in this.watched) {
+      const o = this.watched[id].object;
+      const innerHTML =
+        o.id +
+        " position: " +
+        Math.floor(o.transform.position.x) +
+        ":" +
+        Math.floor(o.transform.position.y) +
+        " width: " +
+        o.width +
+        " height: " +
+        o.height +
+        " left: " +
+        Math.floor(o.transform.rect.left) +
+        " right: " +
+        Math.floor(o.transform.rect.right) +
+        " top: " +
+        Math.floor(o.transform.rect.top) +
+        " bottom: " +
+        Math.floor(o.transform.rect.bottom);
+
+      this.watched[id].element.innerHTML = innerHTML;
     }
   }
 }
@@ -873,7 +926,7 @@ class Game {
   onUpdate = null;
 
   constructor() {
-    this.debugger = new Debugger();
+    this.debugger = new Debugger(this);
     this.debugger.log("Game object constructed.");
   }
 
@@ -884,6 +937,14 @@ class Game {
 
     this.scene = this.scenes[sceneName];
     this.scene.start();
+  }
+
+  update() {
+    if (this.onUpdate) {
+      this.onUpdate();
+    }
+
+    this.debugger.update();
   }
 
   addScene(newScene) {
