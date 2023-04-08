@@ -25,8 +25,9 @@ window.onload = () => {
   };
 
   level1.onStart = () => {
-    level1.camera.lookAt(player);
-    level1.camera.attachTo(world);
+    level1.mainCamera.parent = world;
+    level1.mainCamera.camera.lookAt(player);
+    game.debugger.watch(level1.mainCamera);
   };
 
   level1.addCmdKeys(["Escape"], "back to menu");
@@ -34,15 +35,15 @@ window.onload = () => {
     game.start("Main Menu");
   });
 
-  player.addAnimState("walk up", 1, 9);
-  player.addAnimState("walk down", 3, 9);
-  player.addAnimState("walk left", 2, 9);
-  player.addAnimState("walk right", 4, 9);
+  player.addAnimation("walk up", 1, 9);
+  player.addAnimation("walk down", 3, 9);
+  player.addAnimation("walk left", 2, 9);
+  player.addAnimation("walk right", 4, 9);
 
-  player.addAnimState("look up", 1, 1);
-  player.addAnimState("look down", 3, 1);
-  player.addAnimState("look left", 2, 1);
-  player.addAnimState("look right", 4, 1);
+  player.addAnimation("look up", 1, 1);
+  player.addAnimation("look down", 3, 1);
+  player.addAnimation("look left", 2, 1);
+  player.addAnimation("look right", 4, 1);
 
   player.addCmdKeys(["w"], "walk up", ["ArrowUp"]);
   player.addCmdKeys(["s"], "walk down", ["ArrowDown"]);
@@ -51,32 +52,32 @@ window.onload = () => {
 
   player.onCommand("walk up", () => {
     player.moveUp();
-    player.setAnimState("walk up");
+    player.setAnimation("walk up");
   });
 
   player.onCommand("walk down", () => {
     player.moveDown();
-    player.setAnimState("walk down");
+    player.setAnimation("walk down");
   });
 
   player.onCommand("walk left", () => {
     player.moveLeft();
-    player.setAnimState("walk left");
+    player.setAnimation("walk left");
   });
 
   player.onCommand("walk right", () => {
     player.moveRight();
-    player.setAnimState("walk right");
+    player.setAnimation("walk right");
   });
 
   player.onUpdate = () => {
     if (player.state == "is standing") {
-      player.setAnimState("look " + player.direction);
+      player.setAnimation("look " + player.direction);
     }
   };
 
   level1.addGameObject(world);
-  level1.addGameObject(player);
+  world.addGameObject(player);
 
   game.debugger.watch(world);
   game.debugger.watch(player);
@@ -85,11 +86,11 @@ window.onload = () => {
   game.addScene(level1);
   game.start("Main Menu");
 
-  document.getElementById("start-game").onclick = () => {
+  document.getElementById("start-game").addEventListener("click",  () => {
     game.start("Level 1");
-  };
+  });
 
-  document.getElementById("quit-game").onclick = () => {
+  document.getElementById("quit-game").addEventListener("click", () => {
     game.start("Main Menu");
-  };
+  });
 };
