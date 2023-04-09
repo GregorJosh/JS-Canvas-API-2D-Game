@@ -47,11 +47,13 @@ class Transform extends Component {
   apply() {
     const scene = this.game.scene;
 
-    if (scene.mainCamera) {
-      const camPosX = scene.mainCamera.transform.position.x;
-      const camPosY = scene.mainCamera.transform.position.y;
-      const screenPosX = this.gameObject.transform.position.x - camPosX;
-      const screenPosY = this.gameObject.transform.position.y - camPosY;
+    if (scene.mainCamera && this.gameObject != scene.mainCamera) {
+      const camTransform = scene.mainCamera.getComponent(Transform);
+      const camPosX = camTransform.position.x;
+      const camPosY = camTransform.position.y;
+
+      const screenPosX = this.position.x - camPosX;
+      const screenPosY = this.position.y - camPosY;
 
       this.gameObject.context.setTransform(
         this.scale.x,
@@ -115,13 +117,15 @@ class Camera extends Component {
 
   update() {
     if (this.target) {
-      const gameObject = this.gameObject;
+      const camera = this.gameObject;
+      const camTransform = camera.getComponent(Transform);
       const target = this.target;
+      const targetTransform = target.getComponent(Transform);
 
-      gameObject.transform.position.x =
-        target.transform.position.x - gameObject.width / 2 + target.width / 2;
-      gameObject.transform.position.y =
-        target.transform.position.y - gameObject.height / 2 + target.height / 2;
+      camTransform.position.x =
+        targetTransform.position.x - camera.width / 2 + target.width / 2;
+      camTransform.position.y =
+        targetTransform.position.y - camera.height / 2 + target.height / 2;
     }
   }
 }
@@ -129,23 +133,23 @@ class Camera extends Component {
 class Collider extends Component {
   update() {
     if (this.gameObject.parent) {
-      const parent = this.gameObject.parent.transform;
-      const moving = this.gameObject.transform;
+      const parentTransform = this.gameObject.parent.getComponent(Transform);
+      const movingTransform = this.gameObject.getComponent(Transform);
 
-      if (moving.rect.left < parent.rect.left) {
-        moving.setLeft(parent.rect.left);
+      if (movingTransform.rect.left < parentTransform.rect.left) {
+        movingTransform.setLeft(parentTransform.rect.left);
       }
 
-      if (moving.rect.top < parent.rect.top) {
-        moving.setTop(parent.rect.top);
+      if (movingTransform.rect.top < parentTransform.rect.top) {
+        movingTransform.setTop(parentTransform.rect.top);
       }
 
-      if (moving.rect.right > parent.rect.right) {
-        moving.setRight(parent.rect.right);
+      if (movingTransform.rect.right > parentTransform.rect.right) {
+        movingTransform.setRight(parentTransform.rect.right);
       }
 
-      if (moving.rect.bottom > parent.rect.bottom) {
-        moving.setBottom(parent.rect.bottom);
+      if (movingTransform.rect.bottom > parentTransform.rect.bottom) {
+        movingTransform.setBottom(parentTransform.rect.bottom);
       }
     }
   }
@@ -161,8 +165,6 @@ class SpriteSheet extends Component {
   };
 
   image = null;
-
-  addAnimation(animationName, spritesheetRow, numOfFrames) {}
 
   setImageByTileSize(src, tileWidth, tileHeight) {
     if (!this.image) {
@@ -336,7 +338,7 @@ class GameObject {
   }
 
   draw() {
-    for (const component of this.components) {
+    for (const [name, component] of this.components) {
       component.draw();
     }
 
@@ -389,6 +391,12 @@ class GameObject {
     this.cmdCbMap.set(cmd, callback);
   }
 
+  removeComponent(componentClass) {
+    if (this.components.has(componentClass)) {
+      this.components.delete(componentClass);
+    }
+  }
+
   update() {
     this.executeCommands();
 
@@ -396,11 +404,11 @@ class GameObject {
       this.onUpdate();
     }
 
-    for (const component of this.components) {
+    for (const [componentClass, component] of this.components) {
       component.update();
     }
 
-    for (const gameObject in this.gameObjects) {
+    for (const gameObject of this.gameObjects) {
       gameObject.update();
     }
   }
@@ -412,38 +420,50 @@ class Sprite extends GameObject {
   prevAnimation = null;
   defaultAnimation = "idle";
 
-  constructor(game, width, height, imgSrc, tileWidth, tileHeight) {
+  constructor(game, width, height) {
     super(game, 0, 0, width, height);
-
-    const spritesheet = this.attachComponent(SpriteSheet);
-    spritesheet.setImageByTileSize(imgSrc, tileWidth, tileHeight);
 
     this.addAnimation(this.defaultAnimation, 1, 1);
     this.setAnimation(this.defaultAnimation);
+    this.animation.animate();
+  }
+
+  animate(animationName) {
+    if (!this.animation || this.animation.name !== animationName) {
+      this.setAnimation(animationName);
+    }
+
+    this.animation.animate();
   }
 
   addAnimation(animationName, spritesheetRow, numOfFrames) {
-    const animation = this.attachComponent(StopMotionAnimation);
-    animation.setCycle(animationName, spritesheetRow, numOfFrames);
+    const animation = {
+      name: animationName,
+      id: spritesheetRow,
+      length: numOfFrames,
+    };
 
     this.animations[animationName] = animation;
   }
 
   draw() {
+    const transform = this.getComponent(Transform);
+    const spritesheet = this.getComponent(SpriteSheet);
+
     this.context.save();
-    this.transform.apply();
+    transform.apply();
 
     const spritesheetPosX =
-      this.spritesheet.tile.width * (this.animation.currentFrame.id - 1);
+      spritesheet.tile.width * (this.animation.currentFrame.id - 1);
     const spritesheetPosY =
-      this.spritesheet.tile.height * (this.animation.spritesheetRow - 1);
+      spritesheet.tile.height * (this.animation.spritesheetRow - 1);
 
     this.context.drawImage(
-      this.spritesheet.image,
+      spritesheet.image,
       spritesheetPosX,
       spritesheetPosY,
-      this.spritesheet.tile.width,
-      this.spritesheet.tile.height,
+      spritesheet.tile.width,
+      spritesheet.tile.height,
       this.position.x,
       this.position.y,
       this.width,
@@ -454,9 +474,29 @@ class Sprite extends GameObject {
     this.context.restore();
   }
 
-  setAnimation(animationName) {
-    this.animation = this.animations[animationName];
-    this.animation.animate();
+  setAnimation(newAnimationName) {
+    if (this.animation) {
+      if (this.animation.name == newAnimationName) {
+        return;
+      }
+
+      this.removeComponent(StopMotionAnimation);
+    }
+
+    const animation = this.animations[newAnimationName];
+
+    this.animation = this.attachComponent(StopMotionAnimation);
+    this.animation.setCycle(animation.name, animation.id, animation.length);
+  }
+
+  setSpriteByNumOfTiles(spriteSrc, numOfCols, numOfRows) {
+    const spritesheet = this.attachComponent(SpriteSheet);
+    spritesheet.setImageByNumOfTiles(spriteSrc, numOfCols, numOfRows);
+  }
+
+  setSpriteByTileSize(spriteSrc, tileWidth, tileHeight) {
+    const spritesheet = this.attachComponent(SpriteSheet);
+    spritesheet.setImageByTileSize(spriteSrc, tileWidth, tileHeight);
   }
 }
 
@@ -469,6 +509,12 @@ class Character extends Sprite {
   speed = 60;
   direction = "right";
   state = "is standing";
+
+  constructor(game, width, height) {
+    super(game, width, height);
+
+    this.attachComponent(Collider);
+  }
 
   moveLeft() {
     this.direction = "left";
@@ -511,7 +557,6 @@ class Character extends Sprite {
 }
 
 class TileMap extends GameObject {
-  atlas = null;
   tilemap = [];
   numOfCols = 0;
   numOfRows = 0;
@@ -547,8 +592,10 @@ class TileMap extends GameObject {
   }
 
   draw() {
+    const transform = this.getComponent(Transform);
+
     this.context.save();
-    this.transform.apply();
+    transform.apply();
 
     const atlas = this.getComponent(SpriteSheet);
 
@@ -580,11 +627,17 @@ class TileMap extends GameObject {
 }
 
 class PhysicalCamera extends GameObject {
+  camera = null;
+  collder = null;
+
   constructor(game, x, y, width, height) {
     super(game, x, y, width, height);
 
-    this.attachComponent(Camera);
-    this.attachComponent(Collider);
+    const camera = this.attachComponent(Camera);
+    const collider = this.attachComponent(Collider);
+
+    this.camera = camera;
+    this.collider = collider;
   }
 }
 
@@ -918,6 +971,7 @@ class Input {
 class Debugger {
   game = null;
   container = null;
+  fps = null;
   output = null;
   watcher = null;
   watched = [];
@@ -925,6 +979,7 @@ class Debugger {
   constructor(game) {
     this.game = game;
     this.container = document.getElementById("debugger-container");
+    this.fps = document.getElementById("fps");
     this.output = document.getElementById("debugger-output");
     this.watcher = document.getElementById("debugger-watcher");
   }
@@ -956,26 +1011,29 @@ class Debugger {
   }
 
   update() {
+    this.fps.innerHTML = this.game.fps;
+
     for (const id in this.watched) {
       const o = this.watched[id].object;
+      const transform = o.getComponent(Transform);
       const innerHTML =
         o.id +
         " position: " +
-        Math.floor(o.transform.position.x) +
+        Math.floor(transform.position.x) +
         ":" +
-        Math.floor(o.transform.position.y) +
+        Math.floor(transform.position.y) +
         " width: " +
         o.width +
         " height: " +
         o.height +
         " left: " +
-        Math.floor(o.transform.rect.left) +
+        Math.floor(transform.rect.left) +
         " right: " +
-        Math.floor(o.transform.rect.right) +
+        Math.floor(transform.rect.right) +
         " top: " +
-        Math.floor(o.transform.rect.top) +
+        Math.floor(transform.rect.top) +
         " bottom: " +
-        Math.floor(o.transform.rect.bottom);
+        Math.floor(transform.rect.bottom);
 
       this.watched[id].element.innerHTML = innerHTML;
     }

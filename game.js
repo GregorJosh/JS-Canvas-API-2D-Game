@@ -11,22 +11,21 @@ window.onload = () => {
     32,
     32
   );
-  const player = new Character(
-    game,
-    80,
-    100,
-    "images/skeleton_walk.png",
-    -9,
-    -4
-  );
 
-  game.onUpdate = () => {
-    document.getElementById("fps").innerHTML = game.fps;
-  };
+  const player = new Character(game, 80, 100);
+  player.setSpriteByNumOfTiles("images/skeleton_walk.png", 9, 4);
+  player.addAnimation("walk up", 1, 9);
+  player.addAnimation("walk down", 3, 9);
+  player.addAnimation("walk left", 2, 9);
+  player.addAnimation("walk right", 4, 9);
+  player.addAnimation("look up", 1, 1);
+  player.addAnimation("look down", 3, 1);
+  player.addAnimation("look left", 2, 1);
+  player.addAnimation("look right", 4, 1);
 
   level1.onStart = () => {
-    level1.mainCamera.parent = world;
     level1.mainCamera.camera.lookAt(player);
+    world.addGameObject(level1.mainCamera);
     game.debugger.watch(level1.mainCamera);
   };
 
@@ -35,16 +34,6 @@ window.onload = () => {
     game.start("Main Menu");
   });
 
-  player.addAnimation("walk up", 1, 9);
-  player.addAnimation("walk down", 3, 9);
-  player.addAnimation("walk left", 2, 9);
-  player.addAnimation("walk right", 4, 9);
-
-  player.addAnimation("look up", 1, 1);
-  player.addAnimation("look down", 3, 1);
-  player.addAnimation("look left", 2, 1);
-  player.addAnimation("look right", 4, 1);
-
   player.addCmdKeys(["w"], "walk up", ["ArrowUp"]);
   player.addCmdKeys(["s"], "walk down", ["ArrowDown"]);
   player.addCmdKeys(["a"], "walk left", ["ArrowLeft"]);
@@ -52,27 +41,27 @@ window.onload = () => {
 
   player.onCommand("walk up", () => {
     player.moveUp();
-    player.setAnimation("walk up");
+    player.animate("walk up");
   });
 
   player.onCommand("walk down", () => {
     player.moveDown();
-    player.setAnimation("walk down");
+    player.animate("walk down");
   });
 
   player.onCommand("walk left", () => {
     player.moveLeft();
-    player.setAnimation("walk left");
+    player.animate("walk left");
   });
 
   player.onCommand("walk right", () => {
     player.moveRight();
-    player.setAnimation("walk right");
+    player.animate("walk right");
   });
 
   player.onUpdate = () => {
     if (player.state == "is standing") {
-      player.setAnimation("look " + player.direction);
+      player.animate("look " + player.direction);
     }
   };
 
@@ -86,7 +75,7 @@ window.onload = () => {
   game.addScene(level1);
   game.start("Main Menu");
 
-  document.getElementById("start-game").addEventListener("click",  () => {
+  document.getElementById("start-game").addEventListener("click", () => {
     game.start("Level 1");
   });
 
