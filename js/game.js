@@ -1,4 +1,9 @@
-window.onload = () => {
+import Game from "./objects/game.js";
+import Scene from "./objects/scene.js";
+import TileMap from "./objects/tilemap.js";
+import Character from "./objects/character.js";
+
+window.addEventListener("load", () => {
   const color1 = "#7B6662";
   const game = new Game();
   const menu = new Scene(game, "Main Menu", "html");
@@ -82,4 +87,4 @@ window.onload = () => {
   document.getElementById("quit-game").addEventListener("click", () => {
     game.start("Main Menu");
   });
-};
+});
