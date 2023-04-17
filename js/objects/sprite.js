@@ -15,7 +15,7 @@ export default class Sprite extends GameObject {
 
     this.addAnimation(this.defaultAnimation, 1, 1);
     this.setAnimation(this.defaultAnimation);
-    this.animation.animate();
+    this.animation.init();
   }
 
   animate(animationName) {
@@ -23,7 +23,7 @@ export default class Sprite extends GameObject {
       this.setAnimation(animationName);
     }
 
-    this.animation.animate();
+    this.animation.init();
   }
 
   addAnimation(animationName, spritesheetRow, numOfFrames) {
@@ -71,6 +71,7 @@ export default class Sprite extends GameObject {
       }
 
       this.removeComponent(Animation);
+      this.animation = null;
     }
 
     const animation = this.animations[newAnimationName];

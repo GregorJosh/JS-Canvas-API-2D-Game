@@ -16,7 +16,7 @@ export default class Animation extends Component {
     iteration = 0;
     numOfIterations = 0;
   
-    animate() {
+    init() {
       this.isPlaying = true;
       this.frameDuration = this.duration / this.numOfFrames;
     }

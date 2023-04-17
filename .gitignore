@@ -1,4 +1,2 @@
 .gitignore
-.vscode/launch.json
-JS-Canvas-API-2D-Game.code-workspace
-todo.txt
+.vscode

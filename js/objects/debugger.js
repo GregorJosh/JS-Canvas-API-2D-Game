@@ -3,17 +3,49 @@ import Transform from "../components/transform.js";
 export default class Debugger {
   game = null;
   container = null;
+  isMinimalized = false;
   fps = null;
+  content = null;
   output = null;
   watcher = null;
+  heightBtn = null;
+  outputBtn = null;
+  objectsBtn = null;
   watched = [];
 
   constructor(game) {
     this.game = game;
     this.container = document.getElementById("debugger-container");
-    this.fps = document.getElementById("fps");
+    this.fps = document.getElementById("debugger-fps");
+    this.content = document.getElementById("debugger-content");
     this.output = document.getElementById("debugger-output");
     this.watcher = document.getElementById("debugger-watcher");
+
+    this.heightBtn = document.getElementById("height-btn");
+    this.outputBtn = document.getElementById("output-btn");
+    this.objectsBtn = document.getElementById("objects-btn");
+
+    this.showTab(this.output);
+
+    this.heightBtn.addEventListener("click", (event) => {
+      this.container.classList.toggle("debugger--minimalized");
+    });
+
+    this.outputBtn.addEventListener("click", (event) => {
+      this.showTab(this.output);
+    });
+
+    this.objectsBtn.addEventListener("click", (event) => {
+      this.showTab(this.watcher);
+    });
+  }
+
+  showTab(tab) {
+    for (const element of this.content.children) {
+      element.classList.add("removed");
+    }
+
+    tab.classList.remove("removed");
   }
 
   log(msg) {
@@ -28,46 +60,57 @@ export default class Debugger {
 
   watch(gameObject) {
     if (this.watcher) {
-      const li = document.createElement("li");
+      const container = document.createElement("li");
       const watched = {
         object: gameObject,
-        element: li,
+        id: gameObject.id,
+        container: container,
       };
 
-      li.id = gameObject.id;
-      li.classList.add("debug-window__watched");
+      container.id = gameObject.id;
+      container.classList.add("debugger__watched");
 
       this.watched.push(watched);
-      this.watcher.appendChild(li);
+      this.watcher.appendChild(container);
     }
   }
 
   update() {
     this.fps.innerHTML = this.game.fps;
 
-    for (const id in this.watched) {
-      const o = this.watched[id].object;
-      const transform = o.getComponent(Transform);
-      const innerHTML =
-        o.id +
-        " position: " +
-        Math.floor(transform.position.x) +
-        ":" +
-        Math.floor(transform.position.y) +
-        " width: " +
-        o.width +
-        " height: " +
-        o.height +
-        " left: " +
-        Math.floor(transform.rect.left) +
-        " right: " +
-        Math.floor(transform.rect.right) +
-        " top: " +
-        Math.floor(transform.rect.top) +
-        " bottom: " +
-        Math.floor(transform.rect.bottom);
+    for (const watched of this.watched) {
+      const object = watched.object;
+      const transform = object.getComponent(Transform);
 
-      this.watched[id].element.innerHTML = innerHTML;
+      const html = `
+        <table>
+          <caption>${object.id}</caption>
+          <tr>
+            <td>Position: </td>
+            <td>X: ${Math.floor(transform.position.x)}</td>
+            <td>Y: ${Math.floor(transform.position.y)}</td>
+          </tr>
+          <tr>
+            <td>Width: </td>
+            <td>${object.width}</td>
+          </tr>
+          <tr>
+            <td>Height: </td>
+            <td>${object.height}</td>
+          </tr>
+          <tr>
+            <td></td><td>Top: ${Math.floor(transform.rect.top)}</td><td></td>
+          </tr>
+          <tr>
+            <td>Left: ${Math.floor(transform.rect.left)}</td><td></td><td>Right: ${Math.floor(transform.rect.right)}</td>
+          </tr>
+          <tr>
+            <td></td><td>Bottom: ${Math.floor(transform.rect.bottom)}</td><td></td>
+          </tr>
+        </table>
+      `;
+
+      watched.container.innerHTML = html;
     }
   }
 }

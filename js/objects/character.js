@@ -47,11 +47,10 @@ export default class Character extends Sprite {
     super.update();
 
     const scene = this.game.scene;
-    const sceneLastFrameSeconds = scene.lastFrameDurSec;
     const transform = this.getComponent(Transform);
 
-    transform.position.x += this.velocity.x * sceneLastFrameSeconds;
-    transform.position.y += this.velocity.y * sceneLastFrameSeconds;
+    transform.position.x += this.velocity.x * scene.lastFrameDurSec;
+    transform.position.y += this.velocity.y * scene.lastFrameDurSec;
 
     this.velocity.x = 0;
     this.velocity.y = 0;

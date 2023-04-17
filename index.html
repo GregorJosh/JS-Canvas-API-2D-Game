@@ -4,29 +4,45 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <title>Gra w Canvas API</title>
-
     <link rel="preload" href="./images/skeleton_walk.png" as="image" />
     <link rel="preload" href="./images/terrain_and_objects.png" as="image" />
-
-    <link rel="stylesheet" href="./css/main.css" />
-
+    <link rel="stylesheet" href="./css/main.min.css" />
     <script type="module" src="./js/game.js"></script>
   </head>
   <body>
-    <div class="debug-window" id="debugger-container">
-      <h4 class="debug-window__heading">Debug Window: FPS: <span id="fps"></span></h4>
-      <div class="debug-window__output" id="debugger-output"></div>
-      <div class="debug-window__watcher" id="debugger-watcher"></div>
+    <div class="debugger" id="debugger-container">
+      <div class="debugger__header">
+        <h4 class="debugger__heading">Live Debug</h4>
+        <h4 class="debugger__heading">FPS: <span id="debugger-fps"></span></h4>
+        <button class="debugger__height-btn" id="height-btn" type="button">
+          /\ \/
+        </button>
+      </div>
+      <div class="debugger__filters">
+        <button class="debugger__filter" id="output-btn" type="button">
+          Output
+        </button>
+        <button class="debugger__filter" id="objects-btn" type="button">
+          Objects
+        </button>
+      </div>
+      <div class="debugger__content" id="debugger-content">
+        <div class="removed debugger__output" id="debugger-output"></div>
+        <ul class="removed debugger__watcher" id="debugger-watcher"></ul>
+      </div>
     </div>
-    <canvas id="main-canvas" class="removed canvas"></canvas>
-    <div id="main-menu" class="removed scene">
-      <button id="start-game" class="scene__button" type="button">Start Game</button>
+    <canvas class="removed canvas" id="main-canvas"></canvas>
+    <div class="removed main-menu scene" id="main-menu">
+      <button class="main-menu__start-btn" id="start-game" type="button">
+        Start Game
+      </button>
     </div>
-    <div id="level-1" class="removed scene">
-      <button id="quit-game" type="button">Back to menu</button>
-      <div id="control-panel" class="removed control-panel">
+    <div class="removed level scene" id="level-1">
+      <button class="level__quit-btn" id="quit-game" type="button">
+        Back to menu
+      </button>
+      <div class="removed level__control-panel" id="control-panel">
         <button id="btn-up" type="button">&uarr;</button>
         <div class="row">
           <button id="btn-left" type="button">&larr;</button>
