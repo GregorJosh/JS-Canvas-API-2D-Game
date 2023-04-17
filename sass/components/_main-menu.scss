@@ -1,0 +1,15 @@
+.main-menu {
+  background-image: url(../images/bg.png);
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  text-align: center;
+
+  &__start-btn {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 3rem;
+  }
+}

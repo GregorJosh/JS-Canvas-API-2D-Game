@@ -1,0 +1,21 @@
+.level {
+  &__quit-btn {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    margin: 20px;
+    font-size: 1.5rem;
+  }
+
+  &__control-panel {
+    position: absolute;
+    bottom: 10%;
+    width: 100%;
+    text-align: center;
+
+    & button {
+      font-size: 3rem;
+      padding: 0 0.5em;
+    }
+  }
+}

@@ -1,0 +1,33 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: sans-serif;
+}
+
+body {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  background-color: black;
+  color: $color2;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+button {
+  user-select: none;
+  background-color: $color1;
+  color: var(--color2);
+  border: 1px solid transparent;
+}
+
+button:hover {
+  border: 1px solid $color2;
+  cursor: pointer;
+}
+
+.removed {
+  display: none;
+}
