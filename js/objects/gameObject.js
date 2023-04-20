@@ -35,7 +35,7 @@ export default class GameObject {
   constructor(game, x, y, width, height) {
     this.id = this.constructor.name + GameObject.uid;
 
-    game.debugger.log(this.id + " object is under construction");
+    game.debugger.log(`${this.id} object is under construction`);
 
     this.game = game;
     this.components = new Map();
@@ -98,10 +98,12 @@ export default class GameObject {
       }
     }
 
-    for (let i = 0; i < this.cmdList.length; i++) {
-      this.lastCommand = this.cmdList[i];
-
-      this.cmdCbMap.get(this.lastCommand)();
+    for (const command of this.cmdList) {
+      this.lastCommand = command;
+      
+      const commandCallback = this.cmdCbMap.get(this.lastCommand);
+      
+      commandCallback();
     }
 
     this.cmdList = [];
