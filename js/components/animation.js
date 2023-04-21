@@ -14,7 +14,7 @@ export default class Animation extends Component {
     };
   
     iteration = 0;
-    numOfIterations = 0;
+    numOfIterations = Infinity;
   
     play() {
       this.isPlaying = true;
