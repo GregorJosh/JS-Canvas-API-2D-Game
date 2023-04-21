@@ -23,7 +23,6 @@ export default class GameObject {
 
   keysCmdMap = null;
   cmdCbMap = null;
-  cmdList = [];
   lastCommand = "";
 
   id = 0;
@@ -94,19 +93,13 @@ export default class GameObject {
   executeCommands() {
     for (const [keys, command] of this.keysCmdMap) {
       if (Input.getKeys(keys)) {
-        this.cmdList.push(command);
+        this.lastCommand = command;
+      
+        const commandCallback = this.cmdCbMap.get(this.lastCommand);
+      
+        commandCallback();
       }
     }
-
-    for (const command of this.cmdList) {
-      this.lastCommand = command;
-      
-      const commandCallback = this.cmdCbMap.get(this.lastCommand);
-      
-      commandCallback();
-    }
-
-    this.cmdList = [];
   }
 
   getComponent(componentClass) {

@@ -19,11 +19,12 @@ export default class Sprite extends GameObject {
   }
 
   animate(animationName) {
-    if (!this.animation || this.animation.name !== animationName) {
-      this.setAnimation(animationName);
+    if (!this.animation || 
+       this.animation.name != animationName) {
+       this.setAnimation(animationName);
     }
 
-    this.animation.init();
+    this.animation.play();
   }
 
   addAnimation(animationName, spritesheetRow, numOfFrames) {
