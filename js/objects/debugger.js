@@ -82,7 +82,7 @@ export default class Debugger {
       const object = watched.object;
       const transform = object.getComponent(Transform);
 
-      const html = `
+      let html = `
         <table>
           <caption>${object.id}</caption>
           <tr>
@@ -107,8 +107,15 @@ export default class Debugger {
           <tr>
             <td></td><td>Bottom: ${Math.floor(transform.rect.bottom)}</td><td></td>
           </tr>
-        </table>
       `;
+      
+      if (object.animation) {
+        html += `<tr>
+          <td>State: </td><td colspan="2">${object.animation.name}</td>
+        </tr>`;
+      }
+      
+      html += "</table>";
 
       watched.container.innerHTML = html;
     }
