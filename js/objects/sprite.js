@@ -24,7 +24,7 @@ export default class Sprite extends GameObject {
        this.setAnimation(animationName);
     }
 
-    this.animation.init();
+    this.animation.play();
   }
 
   addAnimation(animationName, spritesheetRow, numOfFrames) {
