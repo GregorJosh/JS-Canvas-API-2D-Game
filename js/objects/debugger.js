@@ -112,6 +112,9 @@ export default class Debugger {
       if (object.animation) {
         html += `<tr>
           <td>State: </td><td colspan="2">${object.animation.name}</td>
+        </tr>
+        <tr>
+          <td>Frame: </td><td colspan="2">${object.animation.currentFrame.id}</td>
         </tr>`;
       }
       
