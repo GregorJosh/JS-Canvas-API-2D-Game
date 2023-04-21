@@ -12,11 +12,22 @@ export default class Character extends Sprite {
   speed = 60;
   direction = "right";
   state = "is standing";
+  lastState = "";
 
   constructor(game, width, height) {
     super(game, width, height);
 
     this.attachComponent(Collider);
+    
+    this.lastState = this.state;
+  }
+  
+  animate(animationName) {
+    if (this.lastState != this.state) {
+      super.animate(animationName);
+      
+      this.lastState = this.state;
+    }
   }
 
   moveLeft() {
