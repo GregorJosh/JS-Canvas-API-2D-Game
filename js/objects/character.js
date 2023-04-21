@@ -18,7 +18,6 @@ export default class Character extends Sprite {
     super(game, width, height);
 
     this.attachComponent(Collider);
-    
     this.lastState = this.state;
   }
   
