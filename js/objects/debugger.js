@@ -3,7 +3,6 @@ import Transform from "../components/transform.js";
 export default class Debugger {
   game = null;
   container = null;
-  isMinimalized = false;
   fps = null;
   content = null;
   output = null;
@@ -26,6 +25,7 @@ export default class Debugger {
     this.objectsBtn = document.getElementById("objects-btn");
 
     this.showTab(this.output);
+    this.container.classList.add("debugger--minimalized");
 
     this.heightBtn.addEventListener("click", (event) => {
       this.container.classList.toggle("debugger--minimalized");
