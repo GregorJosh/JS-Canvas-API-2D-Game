@@ -66,7 +66,7 @@ window.addEventListener("load", () => {
 
   player.onUpdate = () => {
     if (player.state == "is standing") {
-      player.animate("look " + player.direction);
+      player.animate(`look ${player.direction}`);
     }
   };
 
