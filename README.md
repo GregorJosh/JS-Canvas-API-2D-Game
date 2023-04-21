@@ -12,6 +12,8 @@ s - Poruszanie się w dół
 a - Poruszanie się w lewo  
 d - Poruszanie się w prawo
 
+Gra działa dobrze również na smartfonie. Sterowanie za pomocą przycisków na ekranie.
+
 -----IN ENGLISH------
 
 Simple 2d game in Javascript
