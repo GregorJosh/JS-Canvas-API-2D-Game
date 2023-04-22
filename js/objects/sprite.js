@@ -7,7 +7,6 @@ import Animation from "../components/animation.js";
 export default class Sprite extends GameObject {
   animationDefs = [];
   animation = null;
-  prevAnimation = null;
   defaultAnimation = "idle";
 
   constructor(game, width, height) {
@@ -40,7 +39,7 @@ export default class Sprite extends GameObject {
     const transform = this.getComponent(Transform);
     const spritesheet = this.getComponent(SpriteSheet);
 
-    this.context.save();
+    this.canvasLayer.context.save();
     transform.apply();
 
     const spritesheetPosX =
@@ -48,7 +47,7 @@ export default class Sprite extends GameObject {
     const spritesheetPosY =
       spritesheet.tile.height * (this.animation.spritesheetRow - 1);
 
-    this.context.drawImage(
+    this.canvasLayer.context.drawImage(
       spritesheet.image,
       spritesheetPosX,
       spritesheetPosY,
@@ -61,7 +60,7 @@ export default class Sprite extends GameObject {
     );
 
     super.draw();
-    this.context.restore();
+    this.canvasLayer.context.restore();
   }
 
   chooseAnimation(newAnimationName) {
@@ -71,7 +70,6 @@ export default class Sprite extends GameObject {
       }
 
       this.removeComponent(Animation);
-      this.animation = null;
     }
 
     const animationDef = this.animationDefs[newAnimationName];
@@ -85,12 +83,18 @@ export default class Sprite extends GameObject {
   }
 
   setSpriteByNumOfTiles(spriteSrc, numOfCols, numOfRows) {
-    const spritesheet = this.attachComponent(SpriteSheet);
-    spritesheet.setImageByNumOfTiles(spriteSrc, numOfCols, numOfRows);
+    this.attachComponent(SpriteSheet).setImageByNumOfTiles(
+      spriteSrc,
+      numOfCols,
+      numOfRows
+    );
   }
 
   setSpriteByTileSize(spriteSrc, tileWidth, tileHeight) {
-    const spritesheet = this.attachComponent(SpriteSheet);
-    spritesheet.setImageByTileSize(spriteSrc, tileWidth, tileHeight);
+    this.attachComponent(SpriteSheet).setImageByTileSize(
+      spriteSrc,
+      tileWidth,
+      tileHeight
+    );
   }
 }

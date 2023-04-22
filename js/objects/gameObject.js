@@ -14,7 +14,7 @@ export default class GameObject {
   height = 0;
 
   game = null;
-  context = null;
+  canvasLayer = null;
 
   parent = null;
   gameObjects = [];
@@ -38,6 +38,10 @@ export default class GameObject {
 
     this.game = game;
     this.components = new Map();
+
+    this.canvasLayer = {
+      context: null
+    };
 
     const transform = this.attachComponent(Transform);
     transform.position.x = x;
@@ -109,8 +113,8 @@ export default class GameObject {
   }
 
   init(canvas = null) {
-    if (canvas && !this.context) {
-      this.context = canvas.getContext("2d");
+    if (canvas && !this.canvasLayer.context) {
+      this.canvasLayer.context = canvas.getContext("2d");
 
       for (const gameObject of this.gameObjects) {
         gameObject.init(canvas);

@@ -36,7 +36,7 @@ export default class Transform extends Component {
       const screenPosX = this.position.x - camPosX;
       const screenPosY = this.position.y - camPosY;
 
-      this.gameObject.context.setTransform(
+      this.gameObject.canvasLayer.context.setTransform(
         this.scale.x,
         this.skew.v,
         this.skew.h,
@@ -45,7 +45,7 @@ export default class Transform extends Component {
         screenPosY
       );
     } else {
-      this.gameObject.context.setTransform(
+      this.gameObject.canvasLayer.context.setTransform(
         this.scale.x,
         this.skew.v,
         this.skew.h,
@@ -55,7 +55,7 @@ export default class Transform extends Component {
       );
     }
 
-    this.gameObject.context.rotate((this.rotation * Math.PI) / 180);
+    this.gameObject.canvasLayer.context.rotate((this.rotation * Math.PI) / 180);
   }
 
   setBottom(bottom) {

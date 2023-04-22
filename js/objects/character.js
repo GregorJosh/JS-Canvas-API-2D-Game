@@ -22,7 +22,7 @@ export default class Character extends Sprite {
   }
   
   animate(animationName) {
-    if (this.lastState != this.state) {
+    if (this.lastState !== this.state) {
       super.animate(animationName);
       
       this.lastState = this.state;
