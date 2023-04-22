@@ -16,7 +16,7 @@ export default class Animation extends Component {
     iteration = 0;
     numOfIterations = Infinity;
   
-    play() {
+    start() {
       this.isPlaying = true;
       this.frameDuration = this.duration / this.numOfFrames;
     }

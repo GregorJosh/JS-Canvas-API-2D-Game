@@ -14,17 +14,17 @@ export default class Sprite extends GameObject {
     super(game, 0, 0, width, height);
 
     this.addAnimation(this.defaultAnimation, 1, 1);
-    this.setAnimation(this.defaultAnimation);
-    this.animation.init();
+    this.chooseAnAnimation(this.defaultAnimation);
+    this.animation.start();
   }
 
   animate(animationName) {
     if (!this.animation || 
        this.animation.name != animationName) {
-       this.setAnimation(animationName);
+       this.chooseAnAnimation(animationName);
     }
 
-    this.animation.play();
+    this.animation.start();
   }
 
   addAnimation(animationName, spritesheetRow, numOfFrames) {
@@ -65,7 +65,7 @@ export default class Sprite extends GameObject {
     this.context.restore();
   }
 
-  setAnimation(newAnimationName) {
+  chooseAnAnimation(newAnimationName) {
     if (this.animation) {
       if (this.animation.name == newAnimationName) {
         return;
