@@ -19,14 +19,14 @@ window.addEventListener("load", () => {
 
   const player = new Character(game, 80, 100);
   player.setSpriteByNumOfTiles("images/skeleton_walk.png", 9, 4);
-  player.addAnimation("walk up", 1, 9);
-  player.addAnimation("walk down", 3, 9);
-  player.addAnimation("walk left", 2, 9);
-  player.addAnimation("walk right", 4, 9);
-  player.addAnimation("look up", 1, 1);
-  player.addAnimation("look down", 3, 1);
-  player.addAnimation("look left", 2, 1);
-  player.addAnimation("look right", 4, 1);
+  player.defineAnimation("walk up", 1, 9);
+  player.defineAnimation("walk down", 3, 9);
+  player.defineAnimation("walk left", 2, 9);
+  player.defineAnimation("walk right", 4, 9);
+  player.defineAnimation("look up", 1, 1);
+  player.defineAnimation("look down", 3, 1);
+  player.defineAnimation("look left", 2, 1);
+  player.defineAnimation("look right", 4, 1);
 
   level1.onStart = () => {
     level1.mainCamera.camera.lookAt(player);
@@ -80,11 +80,11 @@ window.addEventListener("load", () => {
   game.addScene(level1);
   game.start("Main Menu");
 
-  document.getElementById("start-game").addEventListener("click", () => {
+  document.getElementById("start-btn").addEventListener("click", () => {
     game.start("Level 1");
   });
 
-  document.getElementById("quit-game").addEventListener("click", () => {
+  document.getElementById("quit-btn").addEventListener("click", () => {
     game.start("Main Menu");
   });
 });

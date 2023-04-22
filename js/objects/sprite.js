@@ -5,7 +5,7 @@ import SpriteSheet from "../components/spritesheet.js";
 import Animation from "../components/animation.js";
 
 export default class Sprite extends GameObject {
-  animations = [];
+  animationDefs = [];
   animation = null;
   prevAnimation = null;
   defaultAnimation = "idle";
@@ -13,28 +13,27 @@ export default class Sprite extends GameObject {
   constructor(game, width, height) {
     super(game, 0, 0, width, height);
 
-    this.addAnimation(this.defaultAnimation, 1, 1);
-    this.chooseAnAnimation(this.defaultAnimation);
+    this.defineAnimation(this.defaultAnimation, 1, 1);
+    this.chooseAnimation(this.defaultAnimation);
     this.animation.start();
   }
 
   animate(animationName) {
-    if (!this.animation || 
-       this.animation.name != animationName) {
-       this.chooseAnAnimation(animationName);
+    if (!this.animation || this.animation.name != animationName) {
+      this.chooseAnimation(animationName);
     }
 
     this.animation.start();
   }
 
-  addAnimation(animationName, spritesheetRow, numOfFrames) {
-    const animation = {
+  defineAnimation(animationName, spritesheetRow, numOfFrames) {
+    const animationDef = {
       name: animationName,
       id: spritesheetRow,
       length: numOfFrames,
     };
 
-    this.animations[animationName] = animation;
+    this.animationDefs[animationName] = animationDef;
   }
 
   draw() {
@@ -65,7 +64,7 @@ export default class Sprite extends GameObject {
     this.context.restore();
   }
 
-  chooseAnAnimation(newAnimationName) {
+  chooseAnimation(newAnimationName) {
     if (this.animation) {
       if (this.animation.name == newAnimationName) {
         return;
@@ -75,10 +74,14 @@ export default class Sprite extends GameObject {
       this.animation = null;
     }
 
-    const animation = this.animations[newAnimationName];
+    const animationDef = this.animationDefs[newAnimationName];
 
     this.animation = this.attachComponent(Animation);
-    this.animation.setCycle(animation.name, animation.id, animation.length);
+    this.animation.setCycle(
+      animationDef.name,
+      animationDef.id,
+      animationDef.length
+    );
   }
 
   setSpriteByNumOfTiles(spriteSrc, numOfCols, numOfRows) {
