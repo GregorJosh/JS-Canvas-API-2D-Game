@@ -6,7 +6,7 @@ window.addEventListener("load", () => {
   const game = Engine.createGame("Skeleton");
 
   const editor = Engine.createEditor(game, "Game Editor");
-  editor.setAtlas("/images/terrain-and-objects.png", 32, 32);
+  editor.setAtlas("images/terrain-and-objects.png", 32, 32);
   game.addScene(editor);
 
   game.createScene("Main Menu");
