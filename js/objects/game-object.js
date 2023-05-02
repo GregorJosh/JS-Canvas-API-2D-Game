@@ -14,7 +14,7 @@ export default class GameObject {
   height = 0;
 
   game = null;
-  canvasLayer = null;
+  canvasContext = null;
 
   parent = null;
   gameObjects = [];
@@ -38,10 +38,6 @@ export default class GameObject {
 
     this.game = game;
     this.components = new Map();
-
-    this.canvasLayer = {
-      context: null
-    };
 
     const transform = this.attachComponent(Transform);
     transform.position.x = x;
@@ -70,6 +66,14 @@ export default class GameObject {
     this.gameObjects.push(gameObject);
   }
 
+  assignCanvasContext(canvasElement) {
+    this.canvasContext = canvasElement.getContext("2d");
+
+    for (const gameObject of this.gameObjects) {
+      gameObject.assignCanvasContext(canvasElement);
+    }
+  }
+
   attachComponent(componentClass) {
     if (!this.components.has(componentClass)) {
       const component = new componentClass(this.game, this);
@@ -77,6 +81,14 @@ export default class GameObject {
       this.components.set(componentClass, component);
 
       return component;
+    }
+  }
+
+  clean() {
+    this.gameObjects = [];
+
+    for (const gameObject of this.gameObjects) {
+      gameObject.clean();
     }
   }
 
@@ -97,11 +109,7 @@ export default class GameObject {
   executeCommands() {
     for (const [keys, command] of this.keysCmdMap) {
       if (Input.getKeys(keys)) {
-        this.lastCommand = command;
-      
-        const commandCallback = this.cmdCbMap.get(this.lastCommand);
-      
-        commandCallback();
+        this.cmdCbMap.get(command)();
       }
     }
   }
@@ -112,15 +120,7 @@ export default class GameObject {
     }
   }
 
-  init(canvas = null) {
-    if (canvas && !this.canvasLayer.context) {
-      this.canvasLayer.context = canvas.getContext("2d");
-
-      for (const gameObject of this.gameObjects) {
-        gameObject.init(canvas);
-      }
-    }
-
+  init() {
     if (this.onInit) {
       this.onInit();
     }

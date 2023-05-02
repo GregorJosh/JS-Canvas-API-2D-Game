@@ -1,0 +1,22 @@
+.game-editor {
+    background-color: $color1;
+
+    &__atlas,
+    &__atlas-grid {
+        position: absolute;
+    }
+
+    &__atlas {
+        z-index: 0;
+    }
+
+    &__atlas-grid {
+        z-index: 10;
+        border-spacing: 0;
+
+        & td {
+            border-top: 1px solid $color2;
+            border-left: 1px solid $color2;
+        }
+    }
+}

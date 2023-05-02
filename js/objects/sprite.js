@@ -1,4 +1,4 @@
-import GameObject from "./gameObject.js";
+import GameObject from "./game-object.js";
 
 import Transform from "../components/transform.js";
 import SpriteSheet from "../components/spritesheet.js";
@@ -39,7 +39,7 @@ export default class Sprite extends GameObject {
     const transform = this.getComponent(Transform);
     const spritesheet = this.getComponent(SpriteSheet);
 
-    this.canvasLayer.context.save();
+    this.canvasContext.save();
     transform.apply();
 
     const spritesheetPosX =
@@ -47,7 +47,7 @@ export default class Sprite extends GameObject {
     const spritesheetPosY =
       spritesheet.tile.height * (this.animation.spritesheetRow - 1);
 
-    this.canvasLayer.context.drawImage(
+    this.canvasContext.drawImage(
       spritesheet.image,
       spritesheetPosX,
       spritesheetPosY,
@@ -60,7 +60,7 @@ export default class Sprite extends GameObject {
     );
 
     super.draw();
-    this.canvasLayer.context.restore();
+    this.canvasContext.restore();
   }
 
   chooseAnimation(newAnimationName) {

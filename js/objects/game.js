@@ -1,38 +1,60 @@
 import Debugger from "./debugger.js";
+import Engine from "./engine.js";
+import Scene from "./scene.js";
 
 export default class Game {
-    fps = 0;
-    scenes = [];
-    scene = null;
-    debugger = null;
-    onUpdate = null;
-  
-    constructor() {
-      this.debugger = new Debugger(this);
-      this.debugger.log("Game object is constructed");
+  title = "";
+  fps = 0;
+  scenes = null;
+  scene = null;
+  debugger = null;
+  onUpdate = null;
+
+  constructor(title = "Game Title") {
+    if (Engine.isGameCreated()) {
+      return Engine.getGameInstance();
     }
-  
-    addScene(newScene) {
-      newScene.game = this;
-  
-      this.scenes[newScene.name] = newScene;
-    }
-  
-    start(sceneName) {
+
+    this.debugger = new Debugger(this);
+    this.debugger.log("Game object is constructed");
+
+    this.title = title;
+    this.scenes = new Map();
+
+    Engine.setGameInstance(this);
+  }
+
+  addScene(newScene) {
+    this.scenes.set(newScene.title, newScene);
+  }
+
+  createScene(sceneTitle, sceneType) {
+    const scene = new Scene(this, sceneTitle, sceneType);
+    
+    this.scenes.set(sceneTitle, scene);
+
+    return scene;
+  }
+
+  start(sceneName) {
+    if (this.scenes.has(sceneName)) {
       if (this.scene) {
         this.scene.stop();
+        this.debugger.clean();
       }
-  
-      this.scene = this.scenes[sceneName];
+
+      this.scene = this.scenes.get(sceneName);
       this.scene.start();
-    }
-  
-    update() {
-      if (this.onUpdate) {
-        this.onUpdate();
-      }
-  
-      this.debugger.update();
+    } else {
+      console.error(`Game Class: Scene "${sceneName}" doesn't exist.`);
     }
   }
-  
+
+  update() {
+    if (this.onUpdate) {
+      this.onUpdate();
+    }
+
+    this.debugger.update();
+  }
+}

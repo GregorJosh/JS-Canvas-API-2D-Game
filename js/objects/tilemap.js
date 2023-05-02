@@ -1,4 +1,4 @@
-import GameObject from "./gameObject.js";
+import GameObject from "./game-object.js";
 
 import Transform from "../components/transform.js";
 import SpriteSheet from "../components/spritesheet.js";
@@ -41,7 +41,7 @@ export default class TileMap extends GameObject {
   draw() {
     const transform = this.getComponent(Transform);
 
-    this.canvasLayer.context.save();
+    this.canvasContext.save();
     transform.apply();
 
     const atlas = this.getComponent(SpriteSheet);
@@ -54,7 +54,7 @@ export default class TileMap extends GameObject {
         const dx = j * atlas.tile.width;
         const dy = i * atlas.tile.height;
 
-        this.canvasLayer.context.drawImage(
+        this.canvasContext.drawImage(
           atlas.image,
           sx,
           sy,
@@ -69,6 +69,6 @@ export default class TileMap extends GameObject {
     }
 
     super.draw();
-    this.canvasLayer.context.restore();
+    this.canvasContext.restore();
   }
 }

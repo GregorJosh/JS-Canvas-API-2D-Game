@@ -5,10 +5,10 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gra w Canvas API</title>
-    <link rel="preload" href="./images/skeleton_walk.png" as="image" />
-    <link rel="preload" href="./images/terrain_and_objects.png" as="image" />
+    <link rel="preload" href="./images/skeleton-walk.png" as="image" />
+    <link rel="preload" href="./images/terrain-and-objects.png" as="image" />
     <link rel="stylesheet" href="./css/main.min.css" />
-    <script type="module" src="./js/game.js"></script>
+    <script type="module" src="./js/skeleton-game.js"></script>
   </head>
   <body>
     <div class="debugger" id="debugger">
@@ -32,8 +32,16 @@
         <ul class="removed debugger__watcher" id="debugger-watcher"></ul>
       </div>
     </div>
-    <canvas class="removed canvas" id="main-canvas"> </canvas>
-    <div class="removed main-menu scene" id="main-menu">
+
+    <canvas class="hidden canvas" id="main-canvas"></canvas>
+
+    <div class="hidden game-editor scene" id="game-editor">
+      <button class="quit-btn" id="quit-btn" type="button">Back to menu</button>
+      <div class="game-editor__tile-picker" id="tile-picker">
+      </div>
+    </div>
+
+    <div class="hidden main-menu scene" id="main-menu">
       <ul class="main-menu__btn-list">
         <li>
           <button class="main-menu__start-btn" id="start-btn" type="button">
@@ -46,17 +54,20 @@
           </button>
         </li>
         <li>
-          <button class="main-menu__settings-btn" id="settings-btn" type="button">
+          <button
+            class="main-menu__settings-btn"
+            id="settings-btn"
+            type="button"
+          >
             Settings
           </button>
         </li>
       </ul>
     </div>
-    <div class="removed level scene" id="level-1">
-      <button class="level__quit-btn" id="quit-btn" type="button">
-        Back to menu
-      </button>
-      <div class="removed level__control-panel" id="control-panel">
+
+    <div class="hidden level scene" id="level-1">
+      <button class="quit-btn" id="quit-btn" type="button">Quit Game</button>
+      <div class="hidden level__control-panel" id="control-panel">
         <button id="up-btn" type="button">&uarr;</button>
         <div>
           <button id="left-btn" type="button">&larr;</button>

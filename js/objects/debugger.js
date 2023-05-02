@@ -40,12 +40,17 @@ export default class Debugger {
     });
   }
 
+  clean() {
+    this.watched = [];
+    this.watcher.innerHTML = "";
+  }
+
   showTab(tab) {
     for (const element of this.content.children) {
-      element.classList.add("removed");
+      element.classList.add("hidden");
     }
 
-    tab.classList.remove("removed");
+    tab.classList.remove("hidden");
   }
 
   log(msg) {

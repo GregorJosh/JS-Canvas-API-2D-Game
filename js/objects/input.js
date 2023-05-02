@@ -12,7 +12,7 @@ export default class Input {
     if ("ontouchstart" in window) {
       this.touchScreen = true;
 
-      window.ontouchstart = (event) => {
+      window.addEventListener("touchstart", (event) => {
         const x = Math.floor(event.touches[0].clientX);
         const y = Math.floor(event.touches[0].clientY);
 
@@ -22,44 +22,44 @@ export default class Input {
 
         this.buttons["left"] = true;
         this.setMouseCoord(x, y);
-      };
+      });
 
-      window.ontouchend = (event) => {
+      window.addEventListener("touchend", () => {
         this.buttons["left"] = false;
-      };
+      });
     }
 
-    window.onkeydown = (event) => {
+    window.addEventListener("keydown", (event) => {
       this.setKey(event.key);
-    };
+    });
 
-    window.onkeyup = (event) => {
+    window.addEventListener("keyup", (event) => {
       this.unsetKey(event.key);
-    };
+    });
 
-    window.onmousedown = (event) => {
+    window.addEventListener("mousedown", (event) => {
       if (!this.buttons) {
         this.buttons = [];
       }
 
       this.buttons[this.getButtonName(event.button)] = true;
-    };
+    });
 
-    window.onmouseup = (event) => {
+    window.addEventListener("mouseup", (event) => {
       this.buttons[this.getButtonName(event.button)] = false;
-    };
+    });
 
-    window.onmousemove = (event) => {
+    window.addEventListener("mousemove", (event) => {
       this.setMouseCoord(event.x, event.y);
-    };
+    });
   }
 
   static getKey(key) {
     if (this.keys && this.keys[key]) {
       return true;
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   static getKeys(keys) {
@@ -89,9 +89,9 @@ export default class Input {
   static getButton(button) {
     if (this.buttons && this.buttons[button]) {
       return true;
-    } else {
-      return false;
     }
+
+    return false;
   }
 
   static getButtonName(button) {
