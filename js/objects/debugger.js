@@ -14,7 +14,7 @@ export default class Debugger {
 
   constructor(game) {
     this.game = game;
-    this.container = document.getElementById("debugger-container");
+    this.container = document.getElementById("debugger");
     this.fps = document.getElementById("debugger-fps");
     this.content = document.getElementById("debugger-content");
     this.output = document.getElementById("debugger-output");
@@ -27,25 +27,30 @@ export default class Debugger {
     this.showTab(this.output);
     this.container.classList.add("debugger--minimalized");
 
-    this.heightBtn.addEventListener("click", (event) => {
+    this.heightBtn.addEventListener("click", () => {
       this.container.classList.toggle("debugger--minimalized");
     });
 
-    this.outputBtn.addEventListener("click", (event) => {
+    this.outputBtn.addEventListener("click", () => {
       this.showTab(this.output);
     });
 
-    this.objectsBtn.addEventListener("click", (event) => {
+    this.objectsBtn.addEventListener("click", () => {
       this.showTab(this.watcher);
     });
   }
 
+  clean() {
+    this.watched = [];
+    this.watcher.innerHTML = "";
+  }
+
   showTab(tab) {
     for (const element of this.content.children) {
-      element.classList.add("removed");
+      element.classList.add("hidden");
     }
 
-    tab.classList.remove("removed");
+    tab.classList.remove("hidden");
   }
 
   log(msg) {

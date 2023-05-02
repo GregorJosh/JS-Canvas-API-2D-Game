@@ -1,47 +1,45 @@
-import GameObject from "./gameObject.js";
+import GameObject from "./game-object.js";
 
 import Transform from "../components/transform.js";
 import SpriteSheet from "../components/spritesheet.js";
 import Animation from "../components/animation.js";
 
 export default class Sprite extends GameObject {
-  animations = [];
+  animationDefs = [];
   animation = null;
-  prevAnimation = null;
   defaultAnimation = "idle";
 
   constructor(game, width, height) {
     super(game, 0, 0, width, height);
 
-    this.addAnimation(this.defaultAnimation, 1, 1);
-    this.setAnimation(this.defaultAnimation);
-    this.animation.init();
+    this.defineAnimation(this.defaultAnimation, 1, 1);
+    this.chooseAnimation(this.defaultAnimation);
+    this.animation.start();
   }
 
   animate(animationName) {
-    if (!this.animation || 
-       this.animation.name != animationName) {
-       this.setAnimation(animationName);
+    if (!this.animation || this.animation.name != animationName) {
+      this.chooseAnimation(animationName);
     }
 
-    this.animation.play();
+    this.animation.start();
   }
 
-  addAnimation(animationName, spritesheetRow, numOfFrames) {
-    const animation = {
+  defineAnimation(animationName, spritesheetRow, numOfFrames) {
+    const animationDef = {
       name: animationName,
       id: spritesheetRow,
       length: numOfFrames,
     };
 
-    this.animations[animationName] = animation;
+    this.animationDefs[animationName] = animationDef;
   }
 
   draw() {
     const transform = this.getComponent(Transform);
     const spritesheet = this.getComponent(SpriteSheet);
 
-    this.context.save();
+    this.canvasContext.save();
     transform.apply();
 
     const spritesheetPosX =
@@ -49,7 +47,7 @@ export default class Sprite extends GameObject {
     const spritesheetPosY =
       spritesheet.tile.height * (this.animation.spritesheetRow - 1);
 
-    this.context.drawImage(
+    this.canvasContext.drawImage(
       spritesheet.image,
       spritesheetPosX,
       spritesheetPosY,
@@ -62,32 +60,41 @@ export default class Sprite extends GameObject {
     );
 
     super.draw();
-    this.context.restore();
+    this.canvasContext.restore();
   }
 
-  setAnimation(newAnimationName) {
+  chooseAnimation(newAnimationName) {
     if (this.animation) {
       if (this.animation.name == newAnimationName) {
         return;
       }
 
       this.removeComponent(Animation);
-      this.animation = null;
     }
 
-    const animation = this.animations[newAnimationName];
+    const animationDef = this.animationDefs[newAnimationName];
 
     this.animation = this.attachComponent(Animation);
-    this.animation.setCycle(animation.name, animation.id, animation.length);
+    this.animation.setCycle(
+      animationDef.name,
+      animationDef.id,
+      animationDef.length
+    );
   }
 
   setSpriteByNumOfTiles(spriteSrc, numOfCols, numOfRows) {
-    const spritesheet = this.attachComponent(SpriteSheet);
-    spritesheet.setImageByNumOfTiles(spriteSrc, numOfCols, numOfRows);
+    this.attachComponent(SpriteSheet).setImageByNumOfTiles(
+      spriteSrc,
+      numOfCols,
+      numOfRows
+    );
   }
 
   setSpriteByTileSize(spriteSrc, tileWidth, tileHeight) {
-    const spritesheet = this.attachComponent(SpriteSheet);
-    spritesheet.setImageByTileSize(spriteSrc, tileWidth, tileHeight);
+    this.attachComponent(SpriteSheet).setImageByTileSize(
+      spriteSrc,
+      tileWidth,
+      tileHeight
+    );
   }
 }
