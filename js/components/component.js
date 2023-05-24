@@ -6,7 +6,7 @@ export default class Component {
     this.game = game;
     this.gameObject = gameObject;
 
-    this.game.debugger.log(
+    game.debugger.log(
       `${this.constructor.name} component for ${this.gameObject.id} is constructed`
     );
   }

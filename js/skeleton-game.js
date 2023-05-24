@@ -1,4 +1,5 @@
 import Engine from "./objects/engine.js";
+import Input from "./objects/input.js";
 import TileMap from "./objects/tilemap.js";
 import Character from "./objects/character.js";
 
@@ -9,9 +10,14 @@ window.addEventListener("load", () => {
   editor.setAtlas("images/terrain-and-objects.png", 32, 32);
   game.addScene(editor);
 
-  game.createScene("Main Menu");
+  game.createScene("Main Menu", window.innerWidth, window.innerHeight);
 
-  const level1 = game.createScene("Level 1", "canvas");
+  const level1 = game.createScene(
+    "Level 1",
+    window.innerWidth,
+    Input.touchScreen ? window.innerHeight / 2 : window.innerHeight
+  );
+  level1.setCanvas("main-canvas");
 
   level1.onStart = function () {
     const world = new TileMap(
@@ -70,10 +76,6 @@ window.addEventListener("load", () => {
     this.addGameObject(world);
 
     this.camera.lookAt(player);
-
-    game.debugger.watch(this.camera);
-    game.debugger.watch(world);
-    game.debugger.watch(player);
   };
 
   level1.addCmdKeys(["Escape"], "back to menu");

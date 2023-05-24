@@ -36,10 +36,11 @@ export default class Sprite extends GameObject {
   }
 
   draw() {
+    const canvas = this.canvas;
     const transform = this.getComponent(Transform);
     const spritesheet = this.getComponent(SpriteSheet);
 
-    this.canvasContext.save();
+    canvas.context.save();
     transform.apply();
 
     const spritesheetPosX =
@@ -47,7 +48,7 @@ export default class Sprite extends GameObject {
     const spritesheetPosY =
       spritesheet.tile.height * (this.animation.spritesheetRow - 1);
 
-    this.canvasContext.drawImage(
+    canvas.context.drawImage(
       spritesheet.image,
       spritesheetPosX,
       spritesheetPosY,
@@ -60,7 +61,7 @@ export default class Sprite extends GameObject {
     );
 
     super.draw();
-    this.canvasContext.restore();
+    canvas.context.restore();
   }
 
   chooseAnimation(newAnimationName) {

@@ -37,7 +37,21 @@
 
     <div class="hidden game-editor scene" id="game-editor">
       <button class="quit-btn" id="quit-btn" type="button">Back to menu</button>
-      <div class="game-editor__tile-picker" id="tile-picker">
+      <div class="window" id="tile-picker-window">
+        <div class="window__header">
+          <h4 class="window__heading">Tile Picker</h4>
+          <h4 class="window__heading" id="selected-position"></h4>
+          <h4 class="window__heading" id="mouseover-position"></h4>
+        </div>
+        <div class="window__content" id="tile-picker"></div>
+      </div>
+      <div class="window" id="level-editor-window">
+        <div class="window__header">
+          <h4 class="window__heading">Level Editor</h4>
+        </div>
+        <div class="window__content" id="level-editor">
+          <canvas id="editor-canvas"></canvas>
+        </div>
       </div>
     </div>
 

@@ -5,6 +5,17 @@ import Transform from "../components/transform.js";
 export default class GameObject {
   static uid = 0;
 
+  canvas = {
+    id: "",
+    element: null,
+    camera: null,
+    context: null,
+    width: 300,
+    height: 200,
+  };
+
+  type = "html";
+
   position = {
     x: 0,
     y: 0,
@@ -23,18 +34,18 @@ export default class GameObject {
 
   keysCmdMap = null;
   cmdCbMap = null;
-  lastCommand = "";
 
-  id = 0;
+  id = "";
 
   onDraw = null;
   onInit = null;
   onUpdate = null;
 
   constructor(game, x, y, width, height) {
-    this.id = this.constructor.name + GameObject.uid;
+    this.id = `${this.constructor.name}-${GameObject.uid}`;
 
     game.debugger.log(`${this.id} object is under construction`);
+    game.debugger.watch(this);
 
     this.game = game;
     this.components = new Map();
@@ -67,7 +78,7 @@ export default class GameObject {
   }
 
   assignCanvasContext(canvasElement) {
-    this.canvasContext = canvasElement.getContext("2d");
+    this.canvas.context = canvasElement.getContext("2d");
 
     for (const gameObject of this.gameObjects) {
       gameObject.assignCanvasContext(canvasElement);
@@ -85,10 +96,15 @@ export default class GameObject {
   }
 
   clean() {
-    this.gameObjects = [];
+    this.game.debugger.unwatch(this);
+    this.components.clear();
 
-    for (const gameObject of this.gameObjects) {
-      gameObject.clean();
+    if (this.gameObjects) {
+      for (const gameObject of this.gameObjects) {
+        gameObject.clean();
+      }
+
+      this.gameObjects = [];
     }
   }
 
@@ -134,6 +150,16 @@ export default class GameObject {
     if (this.components.has(componentClass)) {
       this.components.delete(componentClass);
     }
+  }
+
+  setCanvas(elementId) {
+    const canvas = this.canvas;
+
+    canvas.id = elementId;
+    canvas.width = this.width;
+    canvas.height = this.height;
+
+    this.type = "canvas";
   }
 
   update() {
