@@ -22,39 +22,26 @@ export default class TileMap extends GameObject {
     const atlas = this.attachComponent(SpriteSheet);
     atlas.setImageByTileSize(atlasImgSrc, tileWidth, tileHeight);
 
-    for (let i = 0; i < this.numOfRows; ++i) {
-      const row = [];
-
-      for (let j = 0; j < this.numOfCols; ++j) {
-        const tile = {
-          col: 2,
-          row: 2,
-        };
-
-        row.push(tile);
-      }
-
-      this.tilemap.push(row);
-    }
+    this.fillWithTile(2, 2);
   }
 
   draw() {
+    const canvas = this.canvas;
     const transform = this.getComponent(Transform);
-
-    this.canvasContext.save();
-    transform.apply();
-
     const atlas = this.getComponent(SpriteSheet);
 
-    for (let i = 0; i < this.tilemap.length; ++i) {
-      for (let j = 0; j < this.tilemap[i].length; ++j) {
+    canvas.context.save();
+    transform.apply();
+
+    for (let i = 0; i < this.tilemap.length; i += 1) {
+      for (let j = 0; j < this.tilemap[i].length; j += 1) {
         const sx = (this.tilemap[i][j].col - 1) * atlas.tile.width;
         const sy = (this.tilemap[i][j].row - 1) * atlas.tile.height;
 
         const dx = j * atlas.tile.width;
         const dy = i * atlas.tile.height;
 
-        this.canvasContext.drawImage(
+        canvas.context.drawImage(
           atlas.image,
           sx,
           sy,
@@ -69,6 +56,63 @@ export default class TileMap extends GameObject {
     }
 
     super.draw();
-    this.canvasContext.restore();
+    canvas.context.restore();
+  }
+
+  fillNewCol(colValue, rowValue) {
+    for (const row of this.tilemap) {
+      row.push({
+        col: colValue,
+        row: rowValue,
+      });
+    }
+
+    this.numOfCols += 1;
+  }
+
+  fillNewRow(colValue, rowValue) {
+    const row = [];
+
+    for (let i = 0; i < this.numOfCols; i += 1) {
+      row.push({
+        col: colValue,
+        row: rowValue,
+      });
+    }
+
+    this.tilemap.push(row);
+    this.numOfRows += 1;
+  }
+
+  fillWithTile(colValue, rowValue) {
+    for (let i = 0; i < this.numOfRows; i += 1) {
+      const row = [];
+
+      for (let j = 0; j < this.numOfCols; j += 1) {
+        row.push({
+          col: colValue,
+          row: rowValue,
+        });
+      }
+
+      this.tilemap.push(row);
+    }
+  }
+
+  setTile(col, row, { colValue, rowValue }) {
+    const tile = this.tilemap[row - 1][col - 1];
+
+    tile.col = colValue;
+    tile.row = rowValue;
+  }
+
+  update() {
+    const atlas = this.getComponent(SpriteSheet);
+
+    this.width = atlas.tile.width * this.numOfCols;
+    this.height = atlas.tile.height * this.numOfRows;
+    this.numOfTiles = this.numOfCols * this.numOfRows;
+
+    super.update();
   }
 }

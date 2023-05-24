@@ -5,7 +5,7 @@
   z-index: 20;
   width: 50%;
   height: 90%;
-  overflow: hidden;
+  overflow: clip;
   pointer-events: auto;
   text-align: left;
   background-color: $color1;
@@ -25,6 +25,7 @@
     height: 2em;
     background-color: $color2;
     color: $color1;
+    cursor: move;
 
     & .debugger__height-btn {
       padding: 2px 10px;
@@ -52,7 +53,8 @@
   &__content {
     height: calc(85% - 20px);
     margin: 0px 20px;
-    overflow: auto;
+    overflow-x: hidden;
+    overflow-y: auto;
 
     & .debugger__watcher {
       & .debugger__watched {

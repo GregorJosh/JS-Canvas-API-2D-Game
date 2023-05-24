@@ -12,6 +12,12 @@ export default class Debugger {
   objectsBtn = null;
   watched = [];
 
+  isSelected = false;
+  cursorX = 0;
+  cursorY = 0;
+  offsetX = 0;
+  offsetY = 0;
+
   constructor(game) {
     this.game = game;
     this.container = document.getElementById("debugger");
@@ -27,6 +33,40 @@ export default class Debugger {
     this.showTab(this.output);
     this.container.classList.add("debugger--minimalized");
 
+    this.container.addEventListener("mousedown", (mouseEvent) => {
+      mouseEvent.preventDefault();
+
+      this.isSelected = true;
+      this.cursorX = mouseEvent.x;
+      this.cursorY = mouseEvent.y;
+
+      document.addEventListener("mousemove", (mouseEvent) => {
+        if (this.isSelected) {
+          this.offsetX = this.cursorX - mouseEvent.x;
+          this.offsetY = this.cursorY - mouseEvent.y;
+
+          this.cursorX = mouseEvent.x;
+          this.cursorY = mouseEvent.y;
+
+          this.container.style.left = `${
+            this.container.offsetLeft - this.offsetX
+          }px`;
+          this.container.style.top = `${
+            this.container.offsetTop - this.offsetY
+          }px`;
+        }
+      });
+
+      document.addEventListener("mouseup", () => {
+        this.isSelected = false;
+        this.cursorOffsetX = 0;
+        this.cursorOffsetY = 0;
+
+        document.onmouseup = null;
+        document.onmousemove = null;
+      });
+    });
+
     this.heightBtn.addEventListener("click", () => {
       this.container.classList.toggle("debugger--minimalized");
     });
@@ -38,11 +78,6 @@ export default class Debugger {
     this.objectsBtn.addEventListener("click", () => {
       this.showTab(this.watcher);
     });
-  }
-
-  clean() {
-    this.watched = [];
-    this.watcher.innerHTML = "";
   }
 
   showTab(tab) {
@@ -59,7 +94,7 @@ export default class Debugger {
 
       p.innerHTML = msg;
       this.output.appendChild(p);
-      this.output.scrollTop = this.output.scrollHeight;
+      p.scrollIntoView({behavior: "smooth"});
     }
   }
 
@@ -77,6 +112,20 @@ export default class Debugger {
 
       this.watched.push(watched);
       this.watcher.appendChild(container);
+    }
+  }
+
+  unwatch(gameObject) {
+    const element = document.getElementById(gameObject.id);
+
+    if (element) {
+      this.watcher.removeChild(element);
+    }
+
+    for (const watched of this.watched) {
+      if (watched.id === gameObject.id) {
+        this.watched.splice(this.watched.indexOf(watched), 1);
+      }
     }
   }
 
@@ -107,13 +156,17 @@ export default class Debugger {
             <td></td><td>Top: ${Math.floor(transform.rect.top)}</td><td></td>
           </tr>
           <tr>
-            <td>Left: ${Math.floor(transform.rect.left)}</td><td></td><td>Right: ${Math.floor(transform.rect.right)}</td>
+            <td>Left: ${Math.floor(
+              transform.rect.left
+            )}</td><td></td><td>Right: ${Math.floor(transform.rect.right)}</td>
           </tr>
           <tr>
-            <td></td><td>Bottom: ${Math.floor(transform.rect.bottom)}</td><td></td>
+            <td></td><td>Bottom: ${Math.floor(
+              transform.rect.bottom
+            )}</td><td></td>
           </tr>
       `;
-      
+
       if (object.animation) {
         html += `<tr>
           <td>State: </td><td colspan="2">${object.animation.name}</td>
@@ -122,7 +175,7 @@ export default class Debugger {
           <td>Frame: </td><td colspan="2">${object.animation.currentFrame.id}</td>
         </tr>`;
       }
-      
+
       html += "</table>";
 
       watched.container.innerHTML = html;

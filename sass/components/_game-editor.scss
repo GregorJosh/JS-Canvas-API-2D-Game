@@ -1,22 +1,21 @@
 .game-editor {
-    background-color: $color1;
-
-    &__atlas,
-    &__atlas-grid {
-        position: absolute;
-    }
-
     &__atlas {
+        display: block;
+        position: relative;
         z-index: 0;
     }
 
-    &__atlas-grid {
+    &__grid {
+        position: absolute;
+        left: 0;
+        top: 0;
         z-index: 10;
         border-spacing: 0;
+        cursor: pointer;
 
-        & td {
-            border-top: 1px solid $color2;
-            border-left: 1px solid $color2;
+        & td:hover,
+        & .selected {
+            border: 1px solid $color2;
         }
     }
 }

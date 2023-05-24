@@ -28,8 +28,8 @@ export default class Game {
     this.scenes.set(newScene.title, newScene);
   }
 
-  createScene(sceneTitle, sceneType) {
-    const scene = new Scene(this, sceneTitle, sceneType);
+  createScene(sceneTitle, width, height) {
+    const scene = new Scene(this, sceneTitle, width, height);
     
     this.scenes.set(sceneTitle, scene);
 
@@ -40,7 +40,7 @@ export default class Game {
     if (this.scenes.has(sceneName)) {
       if (this.scene) {
         this.scene.stop();
-        this.debugger.clean();
+        this.scene.clean();
       }
 
       this.scene = this.scenes.get(sceneName);

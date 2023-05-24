@@ -3,13 +3,11 @@ import GameObject from "./game-object.js";
 import PhysicalCamera from "./physical-camera.js";
 
 export default class Scene extends GameObject {
-  title = "Scene Title";
+  title = "";
   state = "stopped";
-  type = "html";
 
   hiddenLayerClassName = "hidden";
 
-  canvasLayer = null;
   guiLayer = null;
   mobileLayer = null;
   htmlLayer = null;
@@ -31,28 +29,26 @@ export default class Scene extends GameObject {
     return document.getElementById(id);
   }
 
-  constructor(game, sceneTitle = "", sceneType = "") {
-    super(game, 0, 0, 0, 0);
+  constructor(game, sceneTitle, width, height) {
+    super(game, 0, 0, width, height);
 
     this.htmlLayer = {
       container: null,
     };
 
-    if (sceneTitle) {
-      this.title = sceneTitle;
-    }
-
-    if (sceneType) {
-      this.type = sceneType;
-    }
+    this.title = sceneTitle;
   }
 
   draw() {
-    if (this.canvasLayer) {
-      this.canvasContext.save();
-      this.canvasContext.clearRect(0, 0, this.camera.width, this.camera.height);
+    if (this.type === "canvas") {
+      const canvas = this.canvas;
+
+      canvas.context.save();
+      canvas.context.clearRect(0, 0, canvas.camera.width, canvas.camera.height);
+
       super.draw();
-      this.canvasContext.restore();
+
+      canvas.context.restore();
     }
   }
 
@@ -82,36 +78,24 @@ export default class Scene extends GameObject {
   }
 
   showCanvasLayer() {
-    const canvasLayer = {
-      elementId: "main-canvas",
-      element: null,
-      camera: null,
-    };
+    const canvas = this.canvas;
 
-    canvasLayer.element = document.getElementById(canvasLayer.elementId);
+    canvas.element = document.getElementById(canvas.id);
+    canvas.element.width = canvas.width;
+    canvas.element.height = canvas.height;
 
-    if (Input.touchScreen) {
-      canvasLayer.element.height = window.innerHeight / 2;
-    } else {
-      canvasLayer.element.height = window.innerHeight;
-    }
-
-    canvasLayer.element.width = window.innerWidth;
-
-    canvasLayer.camera = new PhysicalCamera(
+    canvas.camera = new PhysicalCamera(
       this.game,
       0,
       0,
-      canvasLayer.element.width,
-      canvasLayer.element.height
+      canvas.width,
+      canvas.height
     );
 
-    this.addGameObject(canvasLayer.camera);
-    this.camera = canvasLayer.camera;
+    this.addGameObject(canvas.camera);
+    this.camera = canvas.camera;
 
-    canvasLayer.element.classList.remove(this.hiddenLayerClassName);
-
-    this.canvasLayer = canvasLayer;
+    canvas.element.classList.remove(this.hiddenLayerClassName);
   }
 
   showHTMLLayer() {
@@ -180,18 +164,15 @@ export default class Scene extends GameObject {
       this.onStart();
     }
 
-    if (this.type === "canvas") {
-      this.assignCanvasContext(this.canvasLayer.element);
-    }
-
-    if (Input.touchScreen) {
-      this.showMobileLayer();
-    }
-
     this.showHTMLLayer();
 
-    this.width = window.innerWidth;
-    this.height = window.innerHeight;
+    if (this.type === "canvas") {
+      this.assignCanvasContext(this.canvas.element);
+
+      if (Input.touchScreen) {
+        this.showMobileLayer();
+      }
+    }
 
     this.firstAnimFrame = window.requestAnimationFrame((timeStamp) => {
       this.renderFrame(timeStamp);
@@ -212,13 +193,12 @@ export default class Scene extends GameObject {
       this.mobileLayer = null;
     }
 
-    if (this.canvasLayer && this.canvasLayer.element) {
-      this.canvasLayer.element.classList.add(this.hiddenLayerClassName);
-      this.canvasLayer.element = null;
-      this.canvasLayer = null;
-    }
+    if (this.type === "canvas") {
+      const canvas = this.canvas;
 
-    this.clean();
+      canvas.element.classList.add(this.hiddenLayerClassName);
+      canvas.element = null;
+    }
 
     window.cancelAnimationFrame(this.animFrame);
 

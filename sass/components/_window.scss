@@ -1,0 +1,19 @@
+.window {
+  background-color: $color1;
+  color: $color2;
+  border: 1px solid $color2;
+
+  &__header {
+    display: flex;
+    padding: 0 20px;
+    justify-content: space-between;
+    align-items: center;
+    height: 2em;
+    background-color: $color2;
+    color: $color1;
+  }
+
+  &__content {
+    position: relative;
+  }
+}
