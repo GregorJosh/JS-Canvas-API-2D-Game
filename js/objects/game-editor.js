@@ -49,25 +49,25 @@ export default class GameEditor extends Scene {
     const newCells = [];
 
     for (const row of grid.table.rows) {
-      const cell = row.insertCell();
+      const newCell = row.insertCell();
 
-      this.initGridCell(cell, row.cells.length, row.rowIndex);
-      newCells.push(cell);
+      this.initGridCell(newCell, row.cells.length, row.rowIndex + 1);
+      newCells.push(newCell);
     }
 
     return newCells;
   }
 
   addGridRow(grid, numOfCols) {
-    const gridRow = grid.table.insertRow();
+    const newGridRow = grid.table.insertRow();
 
     for (let i = 0; i < numOfCols; i += 1) {
-      const gridCell = gridRow.insertCell();
+      const newGridCell = newGridRow.insertCell();
 
-      this.initGridCell(gridCell, i + 1, grid.table.rows.length);
+      this.initGridCell(newGridCell, i + 1, grid.table.rows.length);
     }
 
-    return gridRow;
+    return newGridRow;
   }
 
   clean() {
@@ -118,19 +118,19 @@ export default class GameEditor extends Scene {
   }
 
   createLevelGrid() {
-    const grid = this.createGrid(
+    const levelGrid = this.createGrid(
       this.tilemap.numOfCols + 1,
       this.tilemap.numOfRows + 1
     );
 
-    for (const cell of grid.cells) {
+    for (const cell of levelGrid.cells) {
       cell.addEventListener("click", (mouseEvent) => {
         this.onCellClick(mouseEvent.target);
       });
     }
 
-    this.levelEditor.appendChild(grid.table);
-    this.levelGrid = grid;
+    this.levelEditor.appendChild(levelGrid.table);
+    this.levelGrid = levelGrid;
   }
 
   deselectAllTiles() {
@@ -153,9 +153,9 @@ export default class GameEditor extends Scene {
     if (cell.dataset.col > this.tilemap.numOfCols) {
       this.tilemap.fillNewCol(this.selectedTile.col, this.selectedTile.row);
 
-      const newCells = this.addGridCol(this.levelGrid);
+      const newGridCells = this.addGridCol(this.levelGrid);
 
-      for (const cell of newCells) {
+      for (const cell of newGridCells) {
         cell.addEventListener("click", (mouseEvent) => {
           this.onCellClick(mouseEvent.target);
         });
@@ -165,7 +165,7 @@ export default class GameEditor extends Scene {
     if (cell.dataset.row > this.tilemap.numOfRows) {
       this.tilemap.fillNewRow(this.selectedTile.col, this.selectedTile.row);
 
-      const gridRow = this.addGridRow(this.levelGrid, this.tilemap.numOfCols);
+      const gridRow = this.addGridRow(this.levelGrid, this.tilemap.numOfCols + 1);
 
       for (const cell of gridRow.cells) {
         cell.addEventListener("click", (mouseEvent) => {
