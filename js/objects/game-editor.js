@@ -12,6 +12,25 @@ export default class GameEditor extends Scene {
   tilePicker = null;
   atlas = null;
   atlasGrid = null;
+  
+  levelEditor = {
+    windowContainerElement: null,
+    windowContentElement: null, 
+    levelScene: null, 
+    levelTileMap: null, 
+    levelGrid: null,
+    init: function() {
+      this.windowContainerElement = document.getElementById("level-editor-window");
+      this.windowContentElement = document.getElementById("level-editor").addEventListener("click", this);
+      
+    },
+    show: function() {
+      
+    },
+    handleEvent: function(event) {
+      
+    }
+  };
 
   levelEditorWnd = null;
   levelEditor = null;
