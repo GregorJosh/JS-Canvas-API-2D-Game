@@ -25,7 +25,16 @@ export default class GameEditor extends Scene {
       
     },
     show: function() {
-      
+const tilemap = new TileMap(this.game, 5, 5, this.atlas.image.src, 32, 32);
+    this.tilemap = tilemap;
+
+    const level = this.game.createScene("Level", 800, 600);
+    level.setCanvas("editor-canvas");
+    level.addGameObject(tilemap);
+    level.start();
+
+    this.level = level;
+    this.createLevelGrid();
     },
     handleEvent: function(event) {
       
@@ -33,7 +42,6 @@ export default class GameEditor extends Scene {
   };
 
   levelEditorWnd = null;
-  levelEditor = null;
   level = null;
   tilemap = null;
   levelGrid = null;
@@ -51,11 +59,11 @@ export default class GameEditor extends Scene {
     super(gameInstance, sceneTitle, window.innerWidth, window.innerHeight);
 
     this.tilePickerWnd = document.getElementById("tile-picker-window");
-    this.levelEditorWnd = document.getElementById("level-editor-window");
     this.tilePicker = document.getElementById("tile-picker");
-    this.levelEditor = document.getElementById("level-editor");
     this.hoverTilePos = document.getElementById("mouseover-position");
     this.selTilePos = document.getElementById("selected-position");
+    
+    this.levelEditor.init();
 
     this.tilePicker.addEventListener("mouseout", (mouseEvent) => {
       this.hoverTilePos.textContent = "";
