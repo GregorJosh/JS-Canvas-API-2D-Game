@@ -12,9 +12,55 @@ export default class GameEditor extends Scene {
   tilePicker = null;
   atlas = null;
   atlasGrid = null;
+  
+  levelEditor = {
+    gameEditor: null,
+    windowContainerElement: null,
+    windowContentElement: null, 
+    levelScene: null, 
+    levelTileMap: null, 
+    levelGrid: null,
+    init: function(gameEditor) {
+      this.gameEditor = gameEditor;
+      this.windowContainerElement = document.getElementById("level-editor-window");
+      this.windowContentElement = document.getElementById("level-editor");
+      this.windowContentElement.addEventListener("click", this);
+    }, 
+    createLevelGrid: function() {
+      const gameEditor = this.gameEditor;
+      const levelGrid = gameEditor.createGrid(
+      this.levelTileMap.numOfCols + 1,
+      this.levelTileMap.numOfRows + 1
+    );
+
+    for (const cell of levelGrid.cells) {
+      cell.addEventListener("click", (mouseEvent) => {
+        gameEditor.onCellClick(mouseEvent.target);
+      });
+    }
+
+    this.windowContentElement.appendChild(levelGrid.table);
+    this.levelGrid = levelGrid;
+    },
+    show: function() {
+      const gameEditor = this.gameEditor;
+       const tilemap = new TileMap(gameEditor.game, 5, 5, gameEditor.atlas.image.src, 32, 32);
+       this.levelTileMap = tilemap;
+
+       const levelScene = gameEditor.game.createScene("Level", 800, 600);
+       levelScene.setCanvas("editor-canvas");
+       levelScene.addGameObject(tilemap);
+       levelScene.start();
+
+       this.levelScene = levelScene;
+       this.createLevelGrid();
+    },
+    handleEvent: function(event) {
+      
+    }
+  };
 
   levelEditorWnd = null;
-  levelEditor = null;
   level = null;
   tilemap = null;
   levelGrid = null;
@@ -32,11 +78,11 @@ export default class GameEditor extends Scene {
     super(gameInstance, sceneTitle, window.innerWidth, window.innerHeight);
 
     this.tilePickerWnd = document.getElementById("tile-picker-window");
-    this.levelEditorWnd = document.getElementById("level-editor-window");
     this.tilePicker = document.getElementById("tile-picker");
-    this.levelEditor = document.getElementById("level-editor");
     this.hoverTilePos = document.getElementById("mouseover-position");
     this.selTilePos = document.getElementById("selected-position");
+    
+    this.levelEditor.init(this);
 
     this.tilePicker.addEventListener("mouseout", (mouseEvent) => {
       this.hoverTilePos.textContent = "";
@@ -117,22 +163,6 @@ export default class GameEditor extends Scene {
     this.atlasGrid = grid;
   }
 
-  createLevelGrid() {
-    const levelGrid = this.createGrid(
-      this.tilemap.numOfCols + 1,
-      this.tilemap.numOfRows + 1
-    );
-
-    for (const cell of levelGrid.cells) {
-      cell.addEventListener("click", (mouseEvent) => {
-        this.onCellClick(mouseEvent.target);
-      });
-    }
-
-    this.levelEditor.appendChild(levelGrid.table);
-    this.levelGrid = levelGrid;
-  }
-
   deselectAllTiles() {
     for (const row of this.atlasGrid.table.rows) {
       for (const cell of row.cells) {
@@ -150,8 +180,8 @@ export default class GameEditor extends Scene {
   }
 
   onCellClick(cell) {
-    if (cell.dataset.col > this.tilemap.numOfCols) {
-      this.tilemap.fillNewCol(this.selectedTile.col, this.selectedTile.row);
+    if (cell.dataset.col > this.levelEditor.levelTileMap.numOfCols) {
+      this.levelEditor.levelTilemap.fillNewCol(this.selectedTile.col, this.selectedTile.row);
 
       const newGridCells = this.addGridCol(this.levelGrid);
 
@@ -217,22 +247,9 @@ export default class GameEditor extends Scene {
     this.selectTile();
   }
 
-  showLevelEditor() {
-    const tilemap = new TileMap(this.game, 5, 5, this.atlas.image.src, 32, 32);
-    this.tilemap = tilemap;
-
-    const level = this.game.createScene("Level", 800, 600);
-    level.setCanvas("editor-canvas");
-    level.addGameObject(tilemap);
-    level.start();
-
-    this.level = level;
-    this.createLevelGrid();
-  }
-
   start() {
     super.start();
     this.showTilePicker();
-    this.showLevelEditor();
+    this.levelEditor.show();
   }
 }
